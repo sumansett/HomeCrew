@@ -1,0 +1,13 @@
+{
+  "name": "HomeCrew",
+  "short_name": "HomeCrew",
+  "description": "Verified technicians and contractors for every household need.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfdf5",
+  "theme_color": "#3f7230",
+  "icons": [
+    { "src": "/logo-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/logo-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}

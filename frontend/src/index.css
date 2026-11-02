@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- responsive safety net (phones, tablets, desktops) ---- */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip; /* never allow sideways scrolling */
+}
+img,
+svg,
+video {
+  max-width: 100%;
+}
+/* long emails / words must wrap instead of stretching the page */
+p,
+h1,
+h2,
+h3 {
+  overflow-wrap: break-word;
+}
+/* 16px inputs stop iOS Safari zooming the page when a field is focused */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+/* comfortable tap targets on touch screens */
+@media (pointer: coarse) {
+  button,
+  [role="button"],
+  select {
+    min-height: 40px;
+  }
+}

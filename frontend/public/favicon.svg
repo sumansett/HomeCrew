@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="g" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5fa04a"/>
+      <stop offset="1" stop-color="#28461f"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#g)"/>
+  <!-- roof -->
+  <path d="M12 31.5 32 14l20 17.5" fill="none" stroke="#fbfdf5" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- walls -->
+  <path d="M18.5 30v16.5a3.5 3.5 0 0 0 3.5 3.5h20a3.5 3.5 0 0 0 3.5-3.5V30" fill="none" stroke="#fbfdf5" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- verified check -->
+  <path d="M25.5 38.5 30.5 43.5 39.5 33" fill="none" stroke="#ffd35c" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
