@@ -118,25 +118,61 @@ Report modules -> code:
 
 ---
 
-## 4. Deploy later
+## 3. Key Advanced Features Implemented
 
-### Backend -> Render (Web Service)
-- Root directory: `backend`, Build: `npm install`, Start: `npm start`
-- Use **MongoDB Atlas** for the database (Render cannot reach your local Compass DB).
-- Environment variables:
-  - `MONGO_URI` = your Atlas connection string
-  - `JWT_SECRET` = long random text
-  - `CLIENT_URL` = your deployed frontend URL
-  - `ADMIN_URL` = your deployed admin URL
-  - run `npm run seed` once (Render Shell, or locally with the Atlas `MONGO_URI`)
+1. **Dual Payment System (Online via Razorpay + Cash on Service Lock)**:
+   - Customers choose payment method (COS or Online) upon booking.
+   - Enforced lock: prevents switching payment methods at doorstep.
+2. **Technician Financial Ledger & Commission Auto-Offset**:
+   - 10% platform commission on cash orders is auto-offset against online earnings.
+   - Debt protection limit blocks technicians from receiving leads if cash commission exceeds threshold.
+   - Admin UPI settlement assistant with 1-click mobile copy and UPI deep linking (`upi://pay`).
+3. **Live Real-Time Notification Bell System**:
+   - Dynamic counter badge (`1, 2, 3...`) across Customer, Technician, and Admin portals.
+   - Live polling for real-time alerts on booking, assignment, bill generation, and payments.
+4. **Verified Contact Security**:
+   - Dual OTP verification via Gmail SMTP and Twilio Verify.
 
-### Frontend and Admin -> Vercel (two separate projects)
-- Root directory: `frontend` (and another project with root `admin`)
-- Framework preset: Vite
-- Environment variable: `VITE_API_URL` = your Render backend URL (no trailing slash)
-- `vercel.json` is already included so page refresh works with React Router.
+---
 
-### Important note about uploads
-Render's free disk is temporary, so uploaded images/documents are deleted on every redeploy.
-For production, move uploads to Cloudinary / S3 (only `middleware/upload.js` and the
-file-path fields need to change).
+## 4. Deploying to the Cloud
+
+### Step 1: MongoDB Database (MongoDB Atlas)
+1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
+2. Create a database user and get your connection string: `mongodb+srv://<user>:<password>@cluster.mongodb.net/homecrew?retryWrites=true&w=majority`.
+
+### Step 2: Backend -> Render (Web Service)
+1. Go to [Render.com](https://render.com), click **New +** -> **Web Service**, and connect your GitHub repo `sumansett/HomeCrew`.
+2. Settings:
+   - **Root Directory:** `backend`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+3. Environment Variables in Render:
+   - `MONGO_URI` = your MongoDB Atlas connection string
+   - `JWT_SECRET` = your secret key
+   - `PORT` = `5001`
+   - `CLIENT_URL` = your deployed frontend Vercel URL
+   - `ADMIN_URL` = your deployed admin Vercel URL
+   - `RAZORPAY_KEY_ID` & `RAZORPAY_KEY_SECRET`
+   - `PLATFORM_COMMISSION_PERCENT` = `10`
+   - `SMTP_EMAIL` & `SMTP_APP_PASSWORD`
+4. Once deployed, note your Render URL (e.g. `https://homecrew-api.onrender.com`).
+
+### Step 3: Frontend (Customer & Technician) -> Vercel
+1. Go to [Vercel.com](https://vercel.com), click **Add New Project**, and import `sumansett/HomeCrew`.
+2. Settings:
+   - **Root Directory:** Edit to `frontend`
+   - **Framework Preset:** Vite
+3. Environment Variables:
+   - `VITE_API_URL` = `https://homecrew-api.onrender.com` (your backend URL without trailing slash)
+4. Click **Deploy**.
+
+### Step 4: Admin Panel -> Vercel
+1. In Vercel, click **Add New Project**, and import `sumansett/HomeCrew` again.
+2. Settings:
+   - **Root Directory:** Edit to `admin`
+   - **Framework Preset:** Vite
+3. Environment Variables:
+   - `VITE_API_URL` = `https://homecrew-api.onrender.com`
+4. Click **Deploy**.
+
