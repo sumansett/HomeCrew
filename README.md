@@ -1,5 +1,19 @@
 # 🏠 HomeCrew
 Home Maintenance & Household Services Platform (MERN stack, built from the project report).
+The HomeCrew project is deployed and accessible through the following links:
+
+1. Customer & Technician Panel
+
+Visit HomeCrew Website
+
+2. Admin Panel
+
+Visit HomeCrew Admin Panel
+
+3. Backend API
+
+HomeCrew Backend API
+
 
 Customers request services, technicians/contractors register with documents, the admin verifies
 them and assigns them to requests, and customers track the status.
