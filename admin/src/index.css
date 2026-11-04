@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Print media query for official invoice modal */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-admin-invoice,
+  #printable-admin-invoice * {
+    visibility: visible;
+  }
+  #printable-admin-invoice {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 24px;
+    background: white !important;
+    z-index: 999999;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+

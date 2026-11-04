@@ -111,6 +111,34 @@ function CustomerDetails({ id, token, onClose, onTogglePhoneVerify }) {
                     {r.assignedProfessional && (
                       <p className="text-xs text-gray-500">👷 {r.assignedProfessional.name} ({r.assignedProfessional.type})</p>
                     )}
+                    {r.billing?.totalAmount > 0 ? (
+                      <div className="mt-2.5 rounded-lg bg-emerald-50/70 border border-emerald-200 p-2.5 text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-1 font-semibold text-gray-800">
+                          <span className="flex items-center gap-1 text-emerald-900 font-bold">
+                            <span>🧾</span> Technician Bill: ₹{r.billing.totalAmount}
+                          </span>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                            r.payment?.status === "paid" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
+                          }`}>
+                            {r.payment?.status === "paid" ? "✓ Paid" : "⏳ Unpaid"} ({((r.payment?.status === "paid" ? r.payment?.method : r.payment?.preferredMethod) === "cash") ? "Cash" : "Online"})
+                          </span>
+                        </div>
+                        <div className="mt-1 flex flex-wrap gap-x-3 text-gray-600 text-[11px]">
+                          <span>Labor: ₹{r.billing.laborCharges || 0}</span>
+                          {r.billing.materialsCost > 0 && <span>Parts: ₹{r.billing.materialsCost}</span>}
+                          {r.billing.invoicedAt && (
+                            <span>Invoiced: {new Date(r.billing.invoicedAt).toLocaleDateString()}</span>
+                          )}
+                        </div>
+                        {r.billing.workNotes && (
+                          <p className="mt-1.5 text-gray-700 italic bg-white/80 p-1.5 rounded border border-emerald-100 text-[11px]">
+                            Work Notes: “{r.billing.workNotes}”
+                          </p>
+                        )}
+                      </div>
+                    ) : r.status === "in-progress" ? (
+                      <p className="mt-1 text-xs text-blue-600">🔧 Job in progress — bill pending generation by technician</p>
+                    ) : null}
                     {r.review?.rating && (
                       <p className="mt-1 text-xs">
                         <Stars value={r.review.rating} /> <span className="text-gray-500">{r.review.comment}</span>
