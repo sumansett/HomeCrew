@@ -6,7 +6,6 @@ import useFetch from "../hooks/useFetch";
 import FormInput from "../components/FormInput";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
-import RegisterContactField from "../components/RegisterContactField";
 import AddressInputs from "../components/AddressInputs";
 
 export default function ProfessionalRegister() {
@@ -26,7 +25,6 @@ export default function ProfessionalRegister() {
     about: "",
   });
   const [files, setFiles] = useState({ idDocument: null, certificate: null });
-  const [phoneVerified, setPhoneVerified] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -37,12 +35,16 @@ export default function ProfessionalRegister() {
     e.preventDefault();
     setError("");
 
-    if (!phoneVerified) {
-      setError("Please verify your mobile number using OTP before submitting.");
+    if (!form.phone.trim()) {
+      setError("Please enter your mobile number.");
       return;
     }
     if (form.password.length < 6) {
       setError("Password must be at least 6 characters long.");
+      return;
+    }
+    if (!form.service) {
+      setError("Please select a service category.");
       return;
     }
     if (!files.idDocument || !files.certificate) {
@@ -82,7 +84,7 @@ export default function ProfessionalRegister() {
       <div className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm sm:p-8">
         <h1 className="text-2xl font-bold text-brand-800">Join HomeCrew as a professional</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Submit your details and documents. Mobile verification is required. Email is optional.
+          Submit your details and documents. Mobile number is required. Email is optional. No OTP verification required.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -98,26 +100,22 @@ export default function ProfessionalRegister() {
             onChange={handleChange}
             placeholder="John Doe"
             required
+            autoFocus
           />
 
-          {/* Phone with inline SMS OTP verification (MANDATORY) */}
-          <RegisterContactField
+          <FormInput
             label="Mobile number"
-            field="phone"
+            name="phone"
             type="tel"
             value={form.phone}
-            onChange={(val) => setForm((prev) => ({ ...prev, phone: val }))}
+            onChange={handleChange}
             placeholder="+91 98765 43210"
-            apiBase="/professionals"
-            isVerified={phoneVerified}
-            onVerifiedChange={setPhoneVerified}
             required
+            extra={<span className="text-xs text-gray-400">Required for login & job alerts</span>}
           />
 
-          {/* Email address (OPTIONAL - no OTP required) */}
           <FormInput
             label="Email address (Optional)"
-            field="email"
             type="email"
             name="email"
             value={form.email}
@@ -217,18 +215,12 @@ export default function ProfessionalRegister() {
           </label>
 
           <div className="sm:col-span-2 pt-2">
-            {!phoneVerified && (
-              <p className="mb-2 text-center text-xs text-amber-700 font-medium">
-                ⚠️ Verify your mobile number with OTP to register (email is optional)
-              </p>
-            )}
             <Button
               type="submit"
               loading={loading}
-              disabled={!phoneVerified || loading}
-              className="w-full disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full"
             >
-              {phoneVerified ? "Submit for verification" : "Verify Mobile Number to Register"}
+              Submit for verification
             </Button>
           </div>
         </form>

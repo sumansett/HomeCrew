@@ -8,31 +8,11 @@ const generateToken = require("../utils/generateToken");
 const { phoneQuery, normalizePhone } = require("../utils/otp");
 
 const fs = require("fs");
-const {
-  sendRegistrationOtp,
-  verifyRegistrationOtpCode,
-  assertRegistrationContactsVerified,
-} = require("../utils/registrationOtp");
 const { getProfessionalFinancialSummary } = require("../utils/financials");
 const { getRazorpayInstance, verifySignature } = require("../utils/razorpay");
 const { createNotification } = require("../utils/notify");
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
-
-// POST /api/professionals/send-register-otp (phone is mandatory, email is optional)
-exports.sendRegisterOtp = asyncHandler(async (req, res) => {
-  const field = req.body?.field || "phone";
-  const value = req.body?.value || (field === "email" ? req.body?.email : req.body?.phone);
-  const result = await sendRegistrationOtp({ res, field, value, role: "professional" });
-  res.json(result);
-});
-
-// POST /api/professionals/verify-register-otp (phone or email)
-exports.verifyRegisterOtp = asyncHandler(async (req, res) => {
-  const { field = "phone", value, code } = req.body || {};
-  const result = await verifyRegistrationOtpCode({ res, field, value, role: "professional", code });
-  res.json(result);
-});
 
 // POST /api/professionals/register  (multipart: idDocument, certificate)
 exports.register = asyncHandler(async (req, res) => {
@@ -57,15 +37,6 @@ exports.register = asyncHandler(async (req, res) => {
   let cleanEmail = email ? String(email).trim().toLowerCase() : undefined;
   if (!cleanEmail) cleanEmail = undefined;
 
-  // Enforce mandatory mobile OTP verification using existing Twilio SMS system
-  try {
-    await assertRegistrationContactsVerified({ res, phone: cleanPhone, role: "professional" });
-  } catch (err) {
-    // Delete newly uploaded files if verification check fails to prevent junk on disk
-    if (idDoc?.path) fs.unlink(idDoc.path, () => {});
-    if (cert?.path) fs.unlink(cert.path, () => {});
-    throw err;
-  }
 
   // Optional email validation & uniqueness check (does not require OTP)
   if (cleanEmail) {
@@ -430,5 +401,4 @@ exports.getMyReviews = asyncHandler(async (req, res) => {
 const { createPasswordResetHandlers } = require("../utils/passwordReset");
 const proResetHandlers = createPasswordResetHandlers(Professional, "professional");
 exports.forgotPassword = proResetHandlers.forgotPassword;
-exports.resetPassword = proResetHandlers.resetPassword;
 

@@ -3,10 +3,8 @@ const c = require("../controllers/adminController");
 const protect = require("../middleware/auth");
 
 router.post("/login", c.login);
-router.post("/forgot-password", c.forgotPassword);
-router.post("/reset-password", c.resetPassword);
 
-// everything below needs an admin token
+// Everything below needs an admin token
 router.use(protect("admin"));
 router.get("/stats", c.getStats);
 
@@ -29,5 +27,10 @@ router.put("/requests/:id/payment", c.updateRequestPayment);
 router.post("/payouts/:id/settle", c.settlePayout);
 router.post("/financials/clear-cash-commission", c.clearCashCommission);
 router.post("/financials/settle-pro-payout", c.settleProfessionalPayouts);
+
+// Administrator-assisted password resets
+router.get("/password-resets", c.getPasswordResetRequests);
+router.put("/password-resets/:id/approve", c.approvePasswordReset);
+router.put("/password-resets/:id/reject", c.rejectPasswordReset);
 
 module.exports = router;

@@ -4,6 +4,7 @@ const Professional = require("../models/Professional");
 const Verification = require("../models/Verification");
 const ServiceRequest = require("../models/ServiceRequest");
 const Service = require("../models/Service");
+const PasswordResetRequest = require("../models/PasswordResetRequest");
 const asyncHandler = require("../utils/asyncHandler");
 const generateToken = require("../utils/generateToken");
 const { getProfessionalFinancialSummary } = require("../utils/financials");
@@ -609,8 +610,99 @@ exports.settleProfessionalPayouts = asyncHandler(async (req, res) => {
 });
 
 
-const { createPasswordResetHandlers } = require("../utils/passwordReset");
-const adminResetHandlers = createPasswordResetHandlers(Admin, "admin");
-exports.forgotPassword = adminResetHandlers.forgotPassword;
-exports.resetPassword = adminResetHandlers.resetPassword;
+// GET /api/admin/password-resets
+exports.getPasswordResetRequests = asyncHandler(async (req, res) => {
+  const requests = await PasswordResetRequest.find().sort({ createdAt: -1 });
+  res.json({ success: true, requests });
+});
+
+// PUT /api/admin/password-resets/:id/approve
+exports.approvePasswordReset = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { temporaryPassword, adminNotes } = req.body || {};
+
+  if (!temporaryPassword || String(temporaryPassword).length < 6) {
+    res.status(400);
+    throw new Error("Temporary password must be at least 6 characters long");
+  }
+
+  const resetReq = await PasswordResetRequest.findById(id);
+  if (!resetReq) {
+    res.status(404);
+    throw new Error("Password reset request not found");
+  }
+
+  if (resetReq.status !== "pending") {
+    res.status(400);
+    throw new Error(`This request has already been ${resetReq.status}`);
+  }
+
+  const TargetModel = resetReq.userModel === "Professional" ? Professional : User;
+  const user = await TargetModel.findById(resetReq.userId);
+  if (!user) {
+    res.status(404);
+    throw new Error("Associated user account no longer exists");
+  }
+
+  user.password = temporaryPassword;
+  await user.save();
+
+  resetReq.status = "approved";
+  resetReq.adminNotes = adminNotes ? String(adminNotes).trim() : "";
+  resetReq.resetBy = req.user._id;
+  resetReq.resolvedAt = new Date();
+  await resetReq.save();
+
+  createNotification({
+    recipientRole: resetReq.userType,
+    recipientId: user._id,
+    title: "Password Reset Approved",
+    message: "An administrator has reset your password. Please log in using the temporary password provided by support.",
+    type: "system",
+  }).catch(() => {});
+
+  res.json({
+    success: true,
+    message: `Password reset approved. Temporary password has been securely set for ${user.name || user.phone}.`,
+    request: resetReq,
+  });
+});
+
+// PUT /api/admin/password-resets/:id/reject
+exports.rejectPasswordReset = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { adminNotes } = req.body || {};
+
+  const resetReq = await PasswordResetRequest.findById(id);
+  if (!resetReq) {
+    res.status(404);
+    throw new Error("Password reset request not found");
+  }
+
+  if (resetReq.status !== "pending") {
+    res.status(400);
+    throw new Error(`This request has already been ${resetReq.status}`);
+  }
+
+  resetReq.status = "rejected";
+  resetReq.adminNotes = adminNotes ? String(adminNotes).trim() : "Rejected by administrator";
+  resetReq.resetBy = req.user._id;
+  resetReq.resolvedAt = new Date();
+  await resetReq.save();
+
+  createNotification({
+    recipientRole: resetReq.userType,
+    recipientId: resetReq.userId,
+    title: "Password Reset Request Rejected",
+    message: resetReq.adminNotes || "Your password reset request was not approved by administration.",
+    type: "system",
+  }).catch(() => {});
+
+  res.json({
+    success: true,
+    message: "Password reset request rejected.",
+    request: resetReq,
+  });
+});
+
 

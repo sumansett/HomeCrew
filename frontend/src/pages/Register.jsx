@@ -5,7 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import FormInput from "../components/FormInput";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
-import RegisterContactField from "../components/RegisterContactField";
 import AddressInputs from "../components/AddressInputs";
 
 export default function Register() {
@@ -19,7 +18,6 @@ export default function Register() {
     address: { street: "", postOffice: "", district: "", state: "", pinCode: "" },
     password: "",
   });
-  const [phoneVerified, setPhoneVerified] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,8 +27,8 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    if (!phoneVerified) {
-      setError("Please verify your mobile number using OTP before signing up.");
+    if (!form.phone.trim()) {
+      setError("Please enter your mobile number.");
       return;
     }
     if (form.password.length < 6) {
@@ -64,7 +62,7 @@ export default function Register() {
       <div className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm sm:p-8">
         <h1 className="text-2xl font-bold text-brand-800">Create your account</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Request home services in minutes. Mobile verification is required. Email is optional.
+          Request home services in minutes. Mobile number is required. Email is optional.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
@@ -77,23 +75,20 @@ export default function Register() {
             onChange={handleChange}
             placeholder="John Doe"
             required
+            autoFocus
           />
 
-          {/* Mandatory Phone with inline SMS OTP verification */}
-          <RegisterContactField
+          <FormInput
             label="Mobile number"
-            field="phone"
+            name="phone"
             type="tel"
             value={form.phone}
-            onChange={(val) => setForm((prev) => ({ ...prev, phone: val }))}
+            onChange={handleChange}
             placeholder="+91 98765 43210"
-            apiBase="/auth"
-            isVerified={phoneVerified}
-            onVerifiedChange={setPhoneVerified}
             required
+            extra={<span className="text-xs text-gray-400">Required for account login and service updates</span>}
           />
 
-          {/* Optional Email address - does not require OTP */}
           <FormInput
             label="Email address (Optional)"
             name="email"
@@ -104,7 +99,6 @@ export default function Register() {
             extra={<span className="text-xs text-gray-400">Optional — No verification required</span>}
           />
 
-          {/* Structured address fields: street, post office, district, state, pin code */}
           <AddressInputs
             value={form.address}
             onChange={(addr) => setForm((prev) => ({ ...prev, address: addr }))}
@@ -122,18 +116,12 @@ export default function Register() {
           />
 
           <div className="pt-2">
-            {!phoneVerified && (
-              <p className="mb-2 text-center text-xs text-amber-700 font-medium">
-                ⚠️ Verify your mobile number with OTP to register (email is optional)
-              </p>
-            )}
             <Button
               type="submit"
               loading={loading}
-              disabled={!phoneVerified || loading}
-              className="w-full disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full"
             >
-              {phoneVerified ? "Complete Registration" : "Verify Mobile Number to Register"}
+              Create Account
             </Button>
           </div>
         </form>

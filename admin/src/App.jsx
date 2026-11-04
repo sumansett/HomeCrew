@@ -9,6 +9,7 @@ import Professionals from "./pages/Professionals.jsx";
 import Requests from "./pages/Requests.jsx";
 import Users from "./pages/Users.jsx";
 import Financials from "./pages/Financials.jsx";
+import PasswordResets from "./pages/PasswordResets.jsx";
 
 // Only logged in admins can see the panel
 function Guard({ children }) {
@@ -35,6 +36,7 @@ export default function App() {
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/requests" element={<Requests />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/password-resets" element={<PasswordResets />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

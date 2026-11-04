@@ -12,6 +12,7 @@ const menu = [
   ["/services", "Services", "🛠️"],
   ["/users", "Customers", "👥"],
   ["/reviews", "Customer Reviews", "⭐"],
+  ["/password-resets", "Password Resets", "🔑"],
 ];
 
 export default function AdminLayout() {
@@ -69,7 +70,8 @@ export default function AdminLayout() {
             </button>
           </div>
         </header>
-        <main className="flex-1 p-4 sm:p-8">
+
+        <main className="flex-1 p-4 md:p-6">
           <Outlet />
         </main>
       </div>
