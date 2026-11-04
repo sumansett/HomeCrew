@@ -226,24 +226,18 @@ export default function Requests() {
                         </button>
                       </div>
 
-                      <div className="mt-2.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                        <div className="rounded-lg bg-gray-50 p-2">
-                          <p className="text-[11px] text-gray-500 font-medium">Labor / Service</p>
+                      <div className="mt-2.5 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                        <div className="rounded-lg bg-gray-50 p-2.5 border border-gray-100">
+                          <p className="text-[11px] text-gray-500 font-medium">Labor / Service Charges</p>
                           <p className="text-sm font-semibold text-gray-800">₹{r.billing?.laborCharges || 0}</p>
                         </div>
-                        <div className="rounded-lg bg-gray-50 p-2">
-                          <p className="text-[11px] text-gray-500 font-medium">Parts / Materials</p>
+                        <div className="rounded-lg bg-gray-50 p-2.5 border border-gray-100">
+                          <p className="text-[11px] text-gray-500 font-medium">Parts / Materials Cost</p>
                           <p className="text-sm font-semibold text-gray-800">₹{r.billing?.materialsCost || 0}</p>
                         </div>
-                        <div className="rounded-lg bg-emerald-50/70 border border-emerald-200 p-2">
+                        <div className="rounded-lg bg-emerald-50/80 border border-emerald-200 p-2.5">
                           <p className="text-[11px] text-emerald-800 font-semibold uppercase tracking-wider">Total Customer Bill</p>
                           <p className="text-base font-extrabold text-emerald-900">₹{totalBill}</p>
-                        </div>
-                        <div className="rounded-lg bg-brand-50/70 border border-brand-200 p-2">
-                          <p className="text-[11px] text-brand-800 font-semibold">Admin (10%) / Pro (90%)</p>
-                          <p className="text-xs font-bold text-brand-900">
-                            ₹{adminCut} / ₹{proShare}
-                          </p>
                         </div>
                       </div>
 
@@ -404,17 +398,17 @@ export default function Requests() {
       )}
     
       {viewInvoice && (
-        <Modal title={`Tax Invoice & Service Bill #${viewInvoice._id.slice(-8).toUpperCase()}`} onClose={() => setViewInvoice(null)}>
-          <div className="space-y-4 text-gray-800" id="printable-admin-invoice">
+        <Modal title={`Customer Bill & Invoice #${viewInvoice._id.slice(-8).toUpperCase()}`} onClose={() => setViewInvoice(null)}>
+          <div className="space-y-3 text-gray-800" id="printable-admin-invoice">
             {/* Header */}
-            <div className="flex items-center justify-between border-b pb-4">
+            <div className="flex items-center justify-between border-b pb-3">
               <div>
                 <h3 className="text-xl font-bold text-brand-800">HomeCrew</h3>
-                <p className="text-xs text-gray-500">Verified Household Services • Official Invoice</p>
+                <p className="text-[11px] text-gray-500">Verified Household Services • Customer Reference Bill</p>
               </div>
               <div className="text-right text-xs text-gray-500">
                 <p className="font-bold text-gray-800 text-sm">INVOICE #{viewInvoice._id.slice(-8).toUpperCase()}</p>
-                <p>Date: {new Date(viewInvoice.billing?.invoicedAt || viewInvoice.updatedAt).toLocaleDateString()}</p>
+                <p className="text-[11px]">Date: {new Date(viewInvoice.billing?.invoicedAt || viewInvoice.updatedAt).toLocaleDateString()}</p>
                 <p className="mt-0.5">
                   <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${
                     viewInvoice.payment?.status === "paid" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"
@@ -426,97 +420,76 @@ export default function Requests() {
             </div>
 
             {/* Customer & Technician details */}
-            <div className="grid gap-3 text-xs sm:grid-cols-2 rounded-xl bg-gray-50/80 p-3 border border-gray-100">
+            <div className="grid gap-2 text-xs sm:grid-cols-2 rounded-xl bg-gray-50/90 p-2.5 border border-gray-200">
               <div>
-                <p className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Customer Details:</p>
+                <p className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Customer Details (Billed To):</p>
                 <p className="font-semibold text-gray-900 mt-0.5">{viewInvoice.customer?.name}</p>
                 <p className="text-gray-600">📞 {viewInvoice.customer?.phone || "N/A"}</p>
                 {viewInvoice.customer?.email && <p className="text-gray-600">📧 {viewInvoice.customer.email}</p>}
-                <p className="text-gray-600 mt-1">📍 {viewInvoice.location}</p>
+                <p className="text-gray-600 mt-0.5">📍 {viewInvoice.location}</p>
               </div>
               <div>
-                <p className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Technician Details (Invoiced By):</p>
+                <p className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Technician (Service Delivered By):</p>
                 <p className="font-semibold text-gray-900 mt-0.5">{viewInvoice.assignedProfessional?.name || "HomeCrew Technician"}</p>
                 <p className="text-gray-600">📞 {viewInvoice.assignedProfessional?.phone || "N/A"}</p>
                 <p className="text-gray-600">🛠️ Service: {viewInvoice.service?.name}</p>
-                <p className="text-gray-600 mt-1">🕒 Scheduled: {new Date(viewInvoice.preferredTime).toLocaleString()}</p>
+                <p className="text-gray-600 mt-0.5">🕒 Service Date: {new Date(viewInvoice.preferredTime).toLocaleString()}</p>
               </div>
             </div>
 
-            {/* Line items table */}
-            <table className="w-full text-left text-sm border-t border-b">
+            {/* Itemized Line items table - strictly customer charges, no commission */}
+            <table className="w-full text-left text-xs border-t border-b">
               <thead>
-                <tr className="border-b text-xs font-semibold text-gray-500 bg-gray-50/50">
-                  <th className="py-2.5 px-2">Item Description</th>
-                  <th className="py-2.5 px-2">Category</th>
-                  <th className="py-2.5 px-2 text-right">Amount</th>
+                <tr className="border-b text-[11px] font-semibold text-gray-500 bg-gray-50/70">
+                  <th className="py-2 px-2">Item Description</th>
+                  <th className="py-2 px-2">Type</th>
+                  <th className="py-2 px-2 text-right">Amount (₹)</th>
                 </tr>
               </thead>
               <tbody className="divide-y text-xs">
                 <tr>
-                  <td className="py-2.5 px-2 font-medium text-gray-800">
+                  <td className="py-2 px-2 font-medium text-gray-800">
                     Labor & On-Site Service Charges
                   </td>
-                  <td className="py-2.5 px-2 text-gray-500">Service Fee</td>
-                  <td className="py-2.5 px-2 text-right font-semibold text-gray-900">
+                  <td className="py-2 px-2 text-gray-500">Service Fee</td>
+                  <td className="py-2 px-2 text-right font-semibold text-gray-900">
                     ₹{viewInvoice.billing?.laborCharges || 0}
                   </td>
                 </tr>
                 {viewInvoice.billing?.materialsCost > 0 && (
                   <tr>
-                    <td className="py-2.5 px-2 font-medium text-gray-800">
+                    <td className="py-2 px-2 font-medium text-gray-800">
                       Replacement Parts & Materials
                     </td>
-                    <td className="py-2.5 px-2 text-gray-500">Hardware / Consumables</td>
-                    <td className="py-2.5 px-2 text-right font-semibold text-gray-900">
+                    <td className="py-2 px-2 text-gray-500">Materials / Hardware</td>
+                    <td className="py-2 px-2 text-right font-semibold text-gray-900">
                       ₹{viewInvoice.billing?.materialsCost}
                     </td>
                   </tr>
                 )}
                 <tr className="font-bold text-sm bg-brand-50/50 text-gray-900">
-                  <td colSpan={2} className="py-2.5 px-2">
-                    Total Billed Amount
+                  <td colSpan={2} className="py-2 px-2">
+                    Total Customer Bill
                   </td>
-                  <td className="py-2.5 px-2 text-right text-brand-900 font-extrabold">
+                  <td className="py-2 px-2 text-right text-brand-900 font-extrabold">
                     ₹{viewInvoice.billing?.totalAmount || 0}
                   </td>
                 </tr>
               </tbody>
             </table>
 
-            {/* Platform Revenue & Technician Net Breakdown */}
-            <div className="rounded-xl border border-brand-100 bg-brand-50/30 p-3 text-xs">
-              <p className="font-bold text-gray-800 text-[11px] uppercase tracking-wider mb-1.5">
-                Revenue & Payout Distribution
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-gray-700">
-                <div className="flex justify-between border-r border-brand-100 pr-3">
-                  <span>HomeCrew Commission (10%):</span>
-                  <span className="font-bold text-brand-900">
-                    ₹{Number(viewInvoice.payment?.platformFee) || Math.round((viewInvoice.billing?.totalAmount || 0) * 0.1)}
-                  </span>
-                </div>
-                <div className="flex justify-between pl-1">
-                  <span>Technician Net Share (90%):</span>
-                  <span className="font-bold text-brand-900">
-                    ₹{Number(viewInvoice.payment?.professionalNet) || ((viewInvoice.billing?.totalAmount || 0) - (Number(viewInvoice.payment?.platformFee) || Math.round((viewInvoice.billing?.totalAmount || 0) * 0.1)))}
-                  </span>
-                </div>
-              </div>
-            </div>
-
             {/* Technician Work Notes */}
             {viewInvoice.billing?.workNotes && (
-              <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-700 border border-gray-200">
-                <p className="font-semibold text-gray-900">Technician Work Notes & Description:</p>
-                <p className="mt-1 text-gray-600 italic">“{viewInvoice.billing.workNotes}”</p>
+              <div className="rounded-lg bg-gray-50 p-2.5 text-xs text-gray-700 border border-gray-200">
+                <p className="font-semibold text-gray-900">Technician On-Site Work Notes:</p>
+                <p className="mt-0.5 text-gray-600 italic">“{viewInvoice.billing.workNotes}”</p>
               </div>
             )}
 
             {/* Payment Details */}
-            <div className="rounded-lg bg-gray-50 p-3 text-xs text-gray-700 space-y-1">
+            <div className="rounded-lg bg-gray-50 p-2.5 text-xs text-gray-700 space-y-1 border border-gray-200">
               <div className="flex justify-between">
-                <span>Payment Method:</span>
+                <span>Payment Mode:</span>
                 <b className="capitalize">
                   {(viewInvoice.payment?.status === "paid" ? viewInvoice.payment?.method : viewInvoice.payment?.preferredMethod) === "cash"
                     ? "Cash on Service (COD)"
@@ -531,20 +504,26 @@ export default function Requests() {
               </div>
               {viewInvoice.payment?.paidAt && (
                 <div className="flex justify-between">
-                  <span>Payment Date:</span>
+                  <span>Paid On:</span>
                   <span>{new Date(viewInvoice.payment.paidAt).toLocaleString()}</span>
                 </div>
               )}
               {viewInvoice.payment?.razorpayPaymentId && (
                 <div className="flex justify-between">
-                  <span>Razorpay Reference:</span>
+                  <span>Transaction Reference:</span>
                   <span className="font-mono">{viewInvoice.payment.razorpayPaymentId}</span>
                 </div>
               )}
             </div>
 
+            {/* Computer-generated single page footer for customer reference */}
+            <div className="border-t border-gray-100 pt-2 text-center text-[10px] text-gray-400">
+              <p>This is a computer-generated customer service bill generated by the technician via HomeCrew.</p>
+              <p>Thank you for choosing HomeCrew Verified Household Services!</p>
+            </div>
+
             {/* Action Buttons (Hidden when printed) */}
-            <div className="flex justify-end gap-2 pt-3 border-t border-gray-100 no-print">
+            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 no-print">
               <button
                 type="button"
                 onClick={() => setViewInvoice(null)}
@@ -557,7 +536,7 @@ export default function Requests() {
                 onClick={() => window.print()}
                 className="rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700 transition flex items-center gap-1.5 shadow-sm"
               >
-                <span>🖨️</span> Print / Save PDF
+                <span>🖨️</span> Print Single Page Bill
               </button>
             </div>
           </div>

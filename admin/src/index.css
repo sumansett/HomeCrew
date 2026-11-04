@@ -2,27 +2,46 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Print media query for official invoice modal */
+/* Print media query for customer reference invoice - Strictly 1 Page */
 @media print {
+  @page {
+    size: portrait;
+    margin: 8mm 10mm;
+  }
+  html,
+  body {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
   body * {
-    visibility: hidden;
+    visibility: hidden !important;
   }
   #printable-admin-invoice,
   #printable-admin-invoice * {
-    visibility: visible;
+    visibility: visible !important;
   }
   #printable-admin-invoice {
-    position: fixed;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 24px;
-    background: white !important;
-    z-index: 999999;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10px 15px !important;
+    background: #ffffff !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
   .no-print {
     display: none !important;
   }
 }
-
