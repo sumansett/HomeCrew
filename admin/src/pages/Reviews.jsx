@@ -38,14 +38,29 @@ export default function Reviews() {
     setDeletingId(review._id);
 
     try {
-      await api(`/admin/reviews/${review._id}`, {
-        method: "DELETE",
-        token,
-      });
+      try {
+        await api(`/admin/reviews/${review._id}`, {
+          method: "DELETE",
+          token,
+        });
+      } catch (delErr) {
+        if (delErr.message && delErr.message.includes("Route not found")) {
+          await api(`/admin/reviews/${review._id}/delete`, {
+            method: "POST",
+            token,
+          });
+        } else {
+          throw delErr;
+        }
+      }
       setActionMsg(`Customer review by ${customerName} has been deleted.`);
       reload();
     } catch (err) {
-      setActionError(err.message || "Failed to delete review");
+      setActionError(
+        err.message?.includes("Route not found")
+          ? "Route not found: Please restart your backend server (Ctrl + C then npm start / npm run dev) to activate the new delete route."
+          : (err.message || "Failed to delete review")
+      );
     } finally {
       setDeletingId(null);
     }

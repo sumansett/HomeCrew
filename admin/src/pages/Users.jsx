@@ -38,10 +38,22 @@ function CustomerDetails({ id, token, onClose, onTogglePhoneVerify }) {
   const handleDeleteReview = async (requestId) => {
     if (!window.confirm("Are you sure you want to delete this customer review?")) return;
     try {
-      await api(`/admin/reviews/${requestId}`, { method: "DELETE", token });
+      try {
+        await api(`/admin/reviews/${requestId}`, { method: "DELETE", token });
+      } catch (err) {
+        if (err.message && err.message.includes("Route not found")) {
+          await api(`/admin/reviews/${requestId}/delete`, { method: "POST", token });
+        } else {
+          throw err;
+        }
+      }
       reload();
     } catch (err) {
-      alert(err.message || "Failed to delete review");
+      alert(
+        err.message?.includes("Route not found")
+          ? "Route not found: Please restart your backend server (Ctrl + C then npm start / npm run dev) to activate the new delete route."
+          : (err.message || "Failed to delete review")
+      );
     }
   };
 
