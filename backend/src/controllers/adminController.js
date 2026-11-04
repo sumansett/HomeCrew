@@ -706,3 +706,37 @@ exports.rejectPasswordReset = asyncHandler(async (req, res) => {
 });
 
 
+
+// PUT /api/admin/users/:id/verify-phone
+exports.verifyUserPhone = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) {
+    res.status(404);
+    throw new Error("Customer not found");
+  }
+  const nextStatus = req.body.phoneVerified !== undefined ? Boolean(req.body.phoneVerified) : !user.phoneVerified;
+  user.phoneVerified = nextStatus;
+  await user.save();
+  res.json({
+    success: true,
+    message: `Customer phone number marked as ${user.phoneVerified ? "verified" : "unverified"}`,
+    user,
+  });
+});
+
+// PUT /api/admin/professionals/:id/verify-phone
+exports.verifyProfessionalPhone = asyncHandler(async (req, res) => {
+  const pro = await Professional.findById(req.params.id);
+  if (!pro) {
+    res.status(404);
+    throw new Error("Professional not found");
+  }
+  const nextStatus = req.body.phoneVerified !== undefined ? Boolean(req.body.phoneVerified) : !pro.phoneVerified;
+  pro.phoneVerified = nextStatus;
+  await pro.save();
+  res.json({
+    success: true,
+    message: `Technician phone number marked as ${pro.phoneVerified ? "verified" : "unverified"}`,
+    professional: pro,
+  });
+});

@@ -214,7 +214,19 @@ export default function Financials() {
                         <tr key={t.professional?._id} className="hover:bg-brand-50/20">
                           <td className="px-3.5 py-3">
                             <p className="font-semibold text-gray-900">{t.professional?.name}</p>
-                            <p className="text-[11px] text-gray-400">{t.professional?.phone} • {t.professional?.type}</p>
+                            <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
+                              <span>{t.professional?.phone}</span>
+                              {t.professional?.phone && (
+                                <a
+                                  href={`tel:${t.professional.phone}`}
+                                  className="inline-flex items-center gap-0.5 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                                  title="Call technician"
+                                >
+                                  📞 Call
+                                </a>
+                              )}
+                              <span>• {t.professional?.type}</span>
+                            </div>
                           </td>
                           <td className="px-3.5 py-3 text-center font-medium text-gray-700">
                             {t.totalJobs}

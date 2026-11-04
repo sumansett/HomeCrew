@@ -153,7 +153,7 @@ export default function ProfessionalDashboard() {
         <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
           <h3 className="font-semibold text-gray-800">My details</h3>
           {pro?.email && (
-            <p className="mt-2 break-all text-sm text-gray-500">📧 {pro.email} {pro.emailVerified && <span className="text-brand-600">✓</span>}</p>
+            <p className="mt-2 break-all text-sm text-gray-500">📧 {pro.email}</p>
           )}
           <p className="text-sm text-gray-500">📞 {pro?.phone} {pro?.phoneVerified && <span className="text-brand-600">✓</span>}</p>
           {formatAddress(pro?.address) && <p className="text-sm text-gray-500">📍 {formatAddress(pro.address)}</p>}

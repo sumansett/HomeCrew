@@ -17,7 +17,7 @@ const tabs = ["pending", "approved", "rejected", "all"];
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "");
 
-function ProCard({ p, onReview, onRemove, onClearCash }) {
+function ProCard({ p, onReview, onRemove, onClearCash, onTogglePhoneVerify }) {
   const [showAll, setShowAll] = useState(false);
   const reviews = p.reviews || [];
   const shown = showAll ? reviews : reviews.slice(0, 2);
@@ -45,9 +45,45 @@ function ProCard({ p, onReview, onRemove, onClearCash }) {
         <StatusBadge status={p.status} />
       </div>
 
-      <div className="mt-3 space-y-1 text-sm text-gray-600">
-        <p className="break-all">📧 {p.email} {p.emailVerified && <span className="text-brand-600" title="Email verified">✓</span>}</p>
-        <p>📞 {p.phone} {p.phoneVerified && <span className="text-brand-600" title="Phone verified">✓</span>}</p>
+      <div className="mt-3 space-y-2 text-sm text-gray-600">
+        {/* Email: no verified or unverified badge */}
+        <p className="break-all">📧 {p.email || "-"}</p>
+
+        {/* Phone with Call button and manual verify option */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span>📞 {p.phone || "-"}</span>
+          {p.phone && (
+            <>
+              <a
+                href={`tel:${p.phone}`}
+                className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                title="Call technician"
+              >
+                📞 Call
+              </a>
+              {p.phoneVerified ? (
+                <button
+                  type="button"
+                  onClick={() => onTogglePhoneVerify(p._id, false)}
+                  className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800 hover:bg-green-200 transition"
+                  title="Phone is verified. Click to mark unverified."
+                >
+                  ✓ Verified
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onTogglePhoneVerify(p._id, true)}
+                  className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 hover:bg-brand-600 hover:text-white transition"
+                  title="Phone is unverified. Click to mark verified."
+                >
+                  Verify Phone
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
         <p>🧰 {p.experience} years experience</p>
         {formatAddress(p.address) && <p>📍 {formatAddress(p.address)}</p>}
         {p.about && <p className="text-gray-500">“{p.about}”</p>}
@@ -132,50 +168,69 @@ function ProCard({ p, onReview, onRemove, onClearCash }) {
             {fin.cashCommissionOwed > 0 && (
               <button
                 type="button"
-                onClick={() => onClearCash(p._id, p.name)}
-                className="rounded-lg bg-amber-600 hover:bg-amber-700 text-white px-2.5 py-1 text-[11px] font-semibold shadow-2xs transition"
-                title="Mark cash platform fee as collected and unblock technician"
+                onClick={() => onClearCash(p._id, p.name, fin.cashCommissionOwed)}
+                className="rounded-lg bg-amber-600 px-3 py-1 text-[11px] font-bold text-white hover:bg-amber-700 shadow-2xs"
+                title="Mark Doorstep Cash Commission as collected by Admin"
               >
-                Clear Cash Fee / Unblock
+                💵 Clear Cash Debt (₹{fin.cashCommissionOwed})
               </button>
             )}
           </div>
         </div>
       )}
 
-      {/* customer reviews */}
-      <div className="mt-4 border-t border-brand-100 pt-3">
-        <p className="mb-2 text-sm font-semibold text-gray-700">Customer reviews</p>
-        {reviews.length === 0 ? (
-          <p className="text-sm text-gray-400">No customer has reviewed this professional yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {shown.map((r) => (
-              <div key={r._id} className="rounded-xl bg-gray-50 p-3">
-                <div className="flex flex-wrap items-center justify-between gap-1">
-                  <span className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                    <Avatar user={r.customer} className="h-6 w-6" text="text-[10px]" />
-                    {r.customer?.name || "Customer"}
-                  </span>
-                  <span className="text-xs text-gray-400">{r.service?.icon} {r.service?.name} • {fmtDate(r.submittedAt)}</span>
-                </div>
-                <p className="mt-1 text-sm"><Stars value={r.rating} /> <span className="text-gray-500">{r.rating}/5</span></p>
-                {r.comment && <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">{r.comment}</p>}
-              </div>
-            ))}
+      {/* Reviews Preview Accordion */}
+      {reviews.length > 0 && (
+        <div className="mt-4 border-t border-brand-100 pt-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-gray-500">Customer feedback</span>
             {reviews.length > 2 && (
-              <button onClick={() => setShowAll(!showAll)} className="text-sm font-medium text-brand-600 hover:underline">
-                {showAll ? "Show fewer" : `Show all ${reviews.length} reviews`}
+              <button onClick={() => setShowAll((v) => !v)} className="text-xs font-medium text-brand-600 hover:underline">
+                {showAll ? "Show less" : `View all (${reviews.length})`}
               </button>
             )}
           </div>
-        )}
-      </div>
+          <div className="mt-2 space-y-2">
+            {shown.map((r) => (
+              <div key={r._id} className="rounded-xl bg-brand-50/50 p-2.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Stars value={r.rating} />
+                    <span className="font-medium text-gray-700">{r.customer?.name || "Customer"}</span>
+                  </div>
+                  <span className="text-[10px] text-gray-400">{fmtDate(r.submittedAt)}</span>
+                </div>
+                {r.comment && <p className="mt-1 text-gray-600">“{r.comment}”</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      <div className="mt-4 flex flex-wrap gap-2">
-        {p.status !== "approved" && <Button onClick={() => onReview(p, "approved")}>Approve</Button>}
-        {p.status !== "rejected" && <Button variant="danger" onClick={() => onReview(p, "rejected")}>Reject</Button>}
-        <Button variant="outline" onClick={() => onRemove(p._id)}>Delete</Button>
+      <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-brand-50">
+        {p.status === "pending" && (
+          <>
+            <button onClick={() => onReview(p, "approved")} className="flex-1 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">
+              Approve
+            </button>
+            <button onClick={() => onReview(p, "rejected")} className="flex-1 rounded-lg border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50">
+              Reject
+            </button>
+          </>
+        )}
+        {p.status === "approved" && (
+          <button onClick={() => onReview(p, "rejected")} className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50">
+            Revoke approval
+          </button>
+        )}
+        {p.status === "rejected" && (
+          <button onClick={() => onReview(p, "approved")} className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-700">
+            Re-approve
+          </button>
+        )}
+        <button onClick={() => onRemove(p._id)} className="ml-auto rounded-lg px-3 py-1.5 text-xs text-gray-400 hover:text-red-600">
+          Delete
+        </button>
       </div>
     </div>
   );
@@ -184,13 +239,24 @@ function ProCard({ p, onReview, onRemove, onClearCash }) {
 export default function Professionals() {
   const { token } = useAdminAuth();
   const [tab, setTab] = useState("pending");
-  const { data, loading, error, reload } = useFetch(
-    `/admin/professionals${tab === "all" ? "" : `?status=${tab}`}`,
-    token
-  );
+  const query = tab === "all" ? "" : `?status=${tab}`;
+  const { data, loading, error, reload } = useFetch(`/admin/professionals${query}`, token);
   const [review, setReview] = useState(null); // { pro, status }
   const [remarks, setRemarks] = useState("");
   const [msg, setMsg] = useState("");
+
+  const handleTogglePhoneVerify = async (proId, targetStatus) => {
+    try {
+      await api(`/admin/professionals/${proId}/verify-phone`, {
+        method: "PUT",
+        body: { phoneVerified: targetStatus },
+        token,
+      });
+      reload();
+    } catch (err) {
+      setMsg(err.message || "Failed to update phone verification");
+    }
+  };
 
   const submitReview = async () => {
     try {
@@ -208,7 +274,7 @@ export default function Professionals() {
   };
 
   const remove = async (id) => {
-    if (!window.confirm("Delete this professional?")) return;
+    if (!window.confirm("Permanently delete this professional and verification records?")) return;
     try {
       await api(`/admin/professionals/${id}`, { method: "DELETE", token });
       reload();
@@ -217,16 +283,18 @@ export default function Professionals() {
     }
   };
 
-  const clearCashCommission = async (proId, proName) => {
-    if (!window.confirm(`Confirm collection of cash platform fee from ${proName}? This will clear their debt and immediately unblock them for new offers.`)) return;
+  const clearCashCommission = async (proId, proName, amount) => {
+    if (!window.confirm(`Clear cash platform commission of ₹${amount} for ${proName}? This confirms the admin has collected the cash in hand.`)) {
+      return;
+    }
     try {
-      await api("/admin/financials/clear-cash-commission", {
+      const res = await api(`/admin/financials/clear-cash-commission`, {
         method: "POST",
         body: { professionalId: proId },
         token,
       });
+      setMsg(res.message || "Cash commission successfully cleared!");
       reload();
-      setMsg(`Cash commission cleared for ${proName}. Account is unblocked!`);
     } catch (err) {
       setMsg(err.message || "Failed to clear cash commission");
     }
@@ -264,6 +332,7 @@ export default function Professionals() {
               onReview={(pro, status) => setReview({ pro, status })}
               onRemove={remove}
               onClearCash={clearCashCommission}
+              onTogglePhoneVerify={handleTogglePhoneVerify}
             />
           ))}
         </div>

@@ -24,14 +24,16 @@ const Row = ({ icon, label, children }) => (
   </div>
 );
 
-const Verified = ({ ok }) =>
-  ok ? <span className="ml-1 text-xs font-semibold text-brand-600">✓ Verified</span> : <span className="ml-1 text-xs text-amber-600">Not verified</span>;
-
 // Full details of one customer + every request they made
-function CustomerDetails({ id, token, onClose }) {
-  const { data, loading, error } = useFetch(`/admin/users/${id}`, token);
+function CustomerDetails({ id, token, onClose, onTogglePhoneVerify }) {
+  const { data, loading, error, reload } = useFetch(`/admin/users/${id}`, token);
   const u = data?.user;
   const requests = data?.requests || [];
+
+  const handleVerify = async (status) => {
+    await onTogglePhoneVerify(id, status);
+    reload();
+  };
 
   return (
     <Modal title="Customer details" onClose={onClose}>
@@ -49,8 +51,46 @@ function CustomerDetails({ id, token, onClose }) {
           </div>
 
           <div className="space-y-3 rounded-xl bg-gray-50 p-4">
-            <Row icon="📧" label="Email">{u.email}<Verified ok={u.emailVerified} /></Row>
-            <Row icon="📞" label="Phone">{u.phone || "-"}{u.phone && <Verified ok={u.phoneVerified} />}</Row>
+            {/* Email: no verified or unverified badge */}
+            <Row icon="📧" label="Email">{u.email || "-"}</Row>
+
+            {/* Phone with Call button and manual verify option */}
+            <Row icon="📞" label="Phone">
+              <div className="flex flex-wrap items-center gap-2">
+                <span>{u.phone || "-"}</span>
+                {u.phone && (
+                  <>
+                    <a
+                      href={`tel:${u.phone}`}
+                      className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                      title="Call customer"
+                    >
+                      📞 Call
+                    </a>
+                    {u.phoneVerified ? (
+                      <button
+                        type="button"
+                        onClick={() => handleVerify(false)}
+                        className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-800 hover:bg-green-200 transition"
+                        title="Phone is verified. Click to mark unverified."
+                      >
+                        ✓ Verified
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => handleVerify(true)}
+                        className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 hover:bg-brand-600 hover:text-white transition"
+                        title="Phone is unverified. Click to mark verified."
+                      >
+                        Verify Phone
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </Row>
+
             <Row icon="📍" label="Address">{formatAddress(u.address) || "-"}</Row>
           </div>
 
@@ -94,6 +134,19 @@ export default function Users() {
   const [viewId, setViewId] = useState(null);
   const [search, setSearch] = useState("");
 
+  const handleTogglePhoneVerify = async (userId, targetStatus) => {
+    try {
+      await api(`/admin/users/${userId}/verify-phone`, {
+        method: "PUT",
+        body: { phoneVerified: targetStatus },
+        token,
+      });
+      reload();
+    } catch (err) {
+      setMsg(err.message);
+    }
+  };
+
   const remove = async (id) => {
     if (!window.confirm("Delete this customer?")) return;
     try {
@@ -135,9 +188,45 @@ export default function Users() {
                 </div>
               </div>
 
-              <div className="mt-3 flex-1 space-y-1 text-sm text-gray-600">
-                <p className="break-all">📧 {u.email} {u.emailVerified && <span className="text-brand-600" title="Email verified">✓</span>}</p>
-                <p>📞 {u.phone || "-"} {u.phone && u.phoneVerified && <span className="text-brand-600" title="Phone verified">✓</span>}</p>
+              <div className="mt-3 flex-1 space-y-2 text-sm text-gray-600">
+                {/* Email: no verified or unverified badge */}
+                <p className="break-all">📧 {u.email || "-"}</p>
+
+                {/* Phone with Call button and manual verify option */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>📞 {u.phone || "-"}</span>
+                  {u.phone && (
+                    <>
+                      <a
+                        href={`tel:${u.phone}`}
+                        className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                        title="Call customer"
+                      >
+                        📞 Call
+                      </a>
+                      {u.phoneVerified ? (
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePhoneVerify(u._id, false)}
+                          className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-800 hover:bg-green-200 transition"
+                          title="Phone is verified. Click to mark unverified."
+                        >
+                          ✓ Verified
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePhoneVerify(u._id, true)}
+                          className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800 hover:bg-brand-600 hover:text-white transition"
+                          title="Phone is unverified. Click to mark verified."
+                        >
+                          Verify Phone
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+
                 <p>📍 {formatAddress(u.address) || "No address given"}</p>
                 <p className="pt-1 text-xs text-gray-500">
                   📋 {u.totalRequests} request{u.totalRequests === 1 ? "" : "s"} • ✅ {u.completedRequests} completed
@@ -157,7 +246,14 @@ export default function Users() {
         </div>
       )}
 
-      {viewId && <CustomerDetails id={viewId} token={token} onClose={() => setViewId(null)} />}
+      {viewId && (
+        <CustomerDetails
+          id={viewId}
+          token={token}
+          onClose={() => setViewId(null)}
+          onTogglePhoneVerify={handleTogglePhoneVerify}
+        />
+      )}
     </>
   );
 }

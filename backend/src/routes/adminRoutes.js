@@ -11,10 +11,12 @@ router.get("/stats", c.getStats);
 router.get("/users", c.getUsers);
 router.get("/users/:id", c.getUser);
 router.delete("/users/:id", c.deleteUser);
+router.put("/users/:id/verify-phone", c.verifyUserPhone);
 
 router.get("/professionals", c.getProfessionals);
 router.put("/professionals/:id/verify", c.verifyProfessional);
 router.delete("/professionals/:id", c.deleteProfessional);
+router.put("/professionals/:id/verify-phone", c.verifyProfessionalPhone);
 
 router.get("/requests", c.getRequests);
 router.get("/requests/:id/professionals", c.getAssignable);

@@ -191,7 +191,20 @@ export default function PasswordResets() {
                         {req.userType === "professional" ? "Technician" : "Customer"}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono font-medium text-gray-800">{req.phone}</td>
+                    <td className="px-4 py-3 font-mono font-medium text-gray-800">
+                      <div className="flex items-center gap-1.5">
+                        <span>{req.phone}</span>
+                        {req.phone && (
+                          <a
+                            href={`tel:${req.phone}`}
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                            title="Call user"
+                          >
+                            📞 Call
+                          </a>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 max-w-xs truncate text-gray-600" title={req.reason}>
                       {req.reason || "-"}
                     </td>
@@ -245,7 +258,19 @@ export default function PasswordResets() {
           <form onSubmit={handleConfirmAction} className="space-y-4">
             <div className="rounded-xl bg-brand-50 p-3 text-xs text-brand-900 space-y-1">
               <p><span className="font-semibold">User:</span> {selectedRequest.name || "User"}</p>
-              <p><span className="font-semibold">Mobile Number:</span> {selectedRequest.phone}</p>
+              <p className="flex items-center gap-2">
+                <span className="font-semibold">Mobile Number:</span>
+                <span>{selectedRequest.phone}</span>
+                {selectedRequest.phone && (
+                  <a
+                    href={`tel:${selectedRequest.phone}`}
+                    className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                    title="Call user"
+                  >
+                    📞 Call
+                  </a>
+                )}
+              </p>
               <p><span className="font-semibold">Role:</span> {selectedRequest.userType === "professional" ? "Technician" : "Customer"}</p>
               {selectedRequest.reason && <p><span className="font-semibold">User Note:</span> {selectedRequest.reason}</p>}
             </div>

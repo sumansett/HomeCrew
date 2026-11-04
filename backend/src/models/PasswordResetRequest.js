@@ -58,3 +58,4 @@ passwordResetRequestSchema.index({ phone: 1, status: 1 });
 passwordResetRequestSchema.index({ createdAt: -1 });
 
 module.exports = mongoose.model("PasswordResetRequest", passwordResetRequestSchema);
+

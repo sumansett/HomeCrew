@@ -72,7 +72,7 @@ exports.register = asyncHandler(async (req, res) => {
     phone: cleanPhone,
     address: cleanAddress,
     emailVerified: false,
-    phoneVerified: true,
+    phoneVerified: false,
   });
 
   res.status(201).json({

@@ -89,7 +89,7 @@ exports.register = asyncHandler(async (req, res) => {
     experience: experience ? Number(experience) : 0,
     about: about ? about.trim() : "",
     emailVerified: false,
-    phoneVerified: true,
+    phoneVerified: false,
   });
 
   await Verification.create({
