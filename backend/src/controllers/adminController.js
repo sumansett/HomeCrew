@@ -372,6 +372,26 @@ exports.getReviews = asyncHandler(async (req, res) => {
   res.json({ success: true, reviews });
 });
 
+// DELETE /api/admin/reviews/:id -> Delete customer review from service request
+exports.deleteReview = asyncHandler(async (req, res) => {
+  const request = await ServiceRequest.findById(req.params.id);
+  if (!request) {
+    res.status(404);
+    throw new Error("Service request not found");
+  }
+
+  if (!request.review || !request.review.rating) {
+    res.status(400);
+    throw new Error("This service request does not have a customer review to delete");
+  }
+
+  await ServiceRequest.findByIdAndUpdate(req.params.id, {
+    $unset: { review: 1 },
+  });
+
+  res.json({ success: true, message: "Customer review deleted successfully" });
+});
+
 // GET /api/admin/financials
 exports.getFinancials = asyncHandler(async (req, res) => {
   const requests = await ServiceRequest.find({

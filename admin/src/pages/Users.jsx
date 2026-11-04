@@ -35,6 +35,16 @@ function CustomerDetails({ id, token, onClose, onTogglePhoneVerify }) {
     reload();
   };
 
+  const handleDeleteReview = async (requestId) => {
+    if (!window.confirm("Are you sure you want to delete this customer review?")) return;
+    try {
+      await api(`/admin/reviews/${requestId}`, { method: "DELETE", token });
+      reload();
+    } catch (err) {
+      alert(err.message || "Failed to delete review");
+    }
+  };
+
   return (
     <Modal title="Customer details" onClose={onClose}>
       <Alert>{error}</Alert>
@@ -140,9 +150,20 @@ function CustomerDetails({ id, token, onClose, onTogglePhoneVerify }) {
                       <p className="mt-1 text-xs text-blue-600">🔧 Job in progress — bill pending generation by technician</p>
                     ) : null}
                     {r.review?.rating && (
-                      <p className="mt-1 text-xs">
-                        <Stars value={r.review.rating} /> <span className="text-gray-500">{r.review.comment}</span>
-                      </p>
+                      <div className="mt-2 flex items-center justify-between rounded-lg bg-gray-50 border border-gray-100 p-2 text-xs">
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                          <Stars value={r.review.rating} />
+                          <span className="text-gray-600 italic truncate">“{r.review.comment}”</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(r._id)}
+                          className="ml-2 shrink-0 inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-semibold text-red-600 hover:bg-red-50 hover:text-red-700 border border-red-200 transition cursor-pointer"
+                          title="Delete this customer review"
+                        >
+                          🗑️ Delete Review
+                        </button>
+                      </div>
                     )}
                   </div>
                 ))}

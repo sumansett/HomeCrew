@@ -24,6 +24,7 @@ router.put("/requests/:id/assign", c.assignProfessional);
 router.put("/requests/:id/status", c.updateRequestStatus);
 
 router.get("/reviews", c.getReviews);
+router.delete("/reviews/:id", c.deleteReview);
 router.get("/financials", c.getFinancials);
 router.put("/requests/:id/payment", c.updateRequestPayment);
 router.post("/payouts/:id/settle", c.settlePayout);

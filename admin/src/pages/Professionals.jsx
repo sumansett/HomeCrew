@@ -17,7 +17,7 @@ const tabs = ["pending", "approved", "rejected", "all"];
 
 const fmtDate = (d) => (d ? new Date(d).toLocaleDateString() : "");
 
-function ProCard({ p, onReview, onRemove, onClearCash, onTogglePhoneVerify }) {
+function ProCard({ p, onReview, onRemove, onClearCash, onTogglePhoneVerify, onDeleteReview }) {
   const [showAll, setShowAll] = useState(false);
   const reviews = p.reviews || [];
   const shown = showAll ? reviews : reviews.slice(0, 2);
@@ -198,7 +198,17 @@ function ProCard({ p, onReview, onRemove, onClearCash, onTogglePhoneVerify }) {
                     <Stars value={r.rating} />
                     <span className="font-medium text-gray-700">{r.customer?.name || "Customer"}</span>
                   </div>
-                  <span className="text-[10px] text-gray-400">{fmtDate(r.submittedAt)}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400">{fmtDate(r.submittedAt)}</span>
+                    <button
+                      type="button"
+                      onClick={() => onDeleteReview(r._id)}
+                      className="text-red-500 hover:text-red-700 text-xs transition cursor-pointer"
+                      title="Delete customer review"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
                 {r.comment && <p className="mt-1 text-gray-600">“{r.comment}”</p>}
               </div>
@@ -255,6 +265,16 @@ export default function Professionals() {
       reload();
     } catch (err) {
       setMsg(err.message || "Failed to update phone verification");
+    }
+  };
+
+  const handleDeleteReview = async (requestId) => {
+    if (!window.confirm("Are you sure you want to delete this customer review?")) return;
+    try {
+      await api(`/admin/reviews/${requestId}`, { method: "DELETE", token });
+      reload();
+    } catch (err) {
+      setMsg(err.message || "Failed to delete review");
     }
   };
 
@@ -333,6 +353,7 @@ export default function Professionals() {
               onRemove={remove}
               onClearCash={clearCashCommission}
               onTogglePhoneVerify={handleTogglePhoneVerify}
+              onDeleteReview={handleDeleteReview}
             />
           ))}
         </div>
