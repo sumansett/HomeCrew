@@ -66,7 +66,7 @@ export default function Services() {
               <tr>
                 <th className="px-4 py-3">Service</th>
                 <th className="px-4 py-3">Category</th>
-                <th className="px-4 py-3">Price</th>
+                <th className="px-4 py-3">Base Price (Visiting)</th>
                 <th className="px-4 py-3">Availability</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
@@ -104,7 +104,10 @@ export default function Services() {
             </div>
             <FormInput label="Description" as="textarea" rows="3" name="description" value={editing.description} onChange={set} required />
             <div className="grid grid-cols-2 gap-4">
-              <FormInput label="Starting price (₹)" type="number" min="0" name="startingPrice" value={editing.startingPrice} onChange={set} />
+              <div>
+                <FormInput label="Base visiting & inspection price (₹)" type="number" min="0" name="startingPrice" value={editing.startingPrice} onChange={set} />
+                <p className="mt-1 text-[11px] text-gray-500">Minimum price customer pays when hiring a technician.</p>
+              </div>
               <FormInput
                 label="Availability"
                 as="select"

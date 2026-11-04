@@ -54,6 +54,39 @@ export default function RequestService() {
           <option value="">Select a service</option>
           {(data?.services || []).map((s) => <option key={s._id} value={s._id}>{s.icon} {s.name}</option>)}
         </FormInput>
+
+        {(() => {
+          const selectedService = (data?.services || []).find((s) => s._id === form.service);
+          if (!selectedService || !selectedService.startingPrice) return null;
+          return (
+            <div className="rounded-2xl border border-brand-200 bg-linear-to-r from-brand-50/70 to-emerald-50/50 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-brand-100/80 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🏷️</span>
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-brand-900">
+                      Base Visiting & Inspection Charge:
+                    </span>
+                    <p className="text-lg font-extrabold text-brand-800">
+                      ₹{selectedService.startingPrice}
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-brand-100 border border-brand-200 px-3 py-1 text-xs font-semibold text-brand-800">
+                  Minimum payable on hire
+                </span>
+              </div>
+              <div className="mt-2 text-xs text-gray-600 leading-relaxed space-y-1">
+                <p>
+                  <b>Clear pricing policy:</b> The ₹{selectedService.startingPrice} is the minimum base price for hiring the technician (covers doorstep arrival, diagnosis, and initial inspection).
+                </p>
+                <p>
+                  If any extra repair labor or replacement parts/materials are needed, the technician will inform you on-site and generate an itemized final bill upon job completion. No advance payment is taken — you pay only after the work is done!
+                </p>
+              </div>
+            </div>
+          );
+        })()}
         <FormInput label="Describe the problem" as="textarea" rows="4" name="description" value={form.description} onChange={handleChange} required />
         <FormInput label="Location / address" name="location" value={form.location} onChange={handleChange} required />
         <FormInput label="Preferred date & time" type="datetime-local" name="preferredTime" value={form.preferredTime} onChange={handleChange} required />

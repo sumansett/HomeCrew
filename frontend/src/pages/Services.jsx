@@ -23,6 +23,17 @@ export default function Services() {
     <div className="mx-auto max-w-6xl px-4 py-10">
       <PageHeader title="Our Services" subtitle="Choose a service and request a verified professional." />
 
+      {/* Base Pricing Transparency Banner */}
+      <div className="mb-6 rounded-2xl border border-brand-200 bg-brand-50/70 p-4 text-xs text-gray-700 flex items-start gap-3 shadow-2xs">
+        <span className="text-xl shrink-0">🏷️</span>
+        <div>
+          <p className="font-bold text-gray-900 text-sm">Transparent Base Pricing</p>
+          <p className="text-gray-600 mt-0.5 leading-relaxed">
+            The price displayed on each service is the <b>minimum base price</b> payable when hiring a technician. It covers the technician's doorstep visit, on-site problem assessment, and initial diagnostic inspection. Any additional repair labor or replacement materials will be clearly itemized on your final bill upon job completion.
+          </p>
+        </div>
+      </div>
+
       <div className="mb-6 flex flex-col gap-3 sm:flex-row">
         <input
           value={search}
