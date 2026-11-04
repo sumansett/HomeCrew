@@ -16,7 +16,7 @@ const fmtTime = (d) => (d ? new Date(d).toLocaleString() : "-");
 
 export default function PasswordResets() {
   const { token } = useAdminAuth();
-  const { data, loading, error, refetch } = useFetch("/admin/password-resets", token);
+  const { data, loading, error, reload } = useFetch("/admin/password-resets", token);
   const [activeTab, setActiveTab] = useState("pending");
   const [search, setSearch] = useState("");
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -99,7 +99,7 @@ export default function PasswordResets() {
         setSuccessMsg(res.message || "Password reset request rejected.");
       }
       closeModal();
-      refetch();
+      reload();
     } catch (err) {
       setActionError(err.message);
     } finally {
