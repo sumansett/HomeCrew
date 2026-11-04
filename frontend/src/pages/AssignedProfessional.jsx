@@ -73,10 +73,23 @@ export default function AssignedProfessional() {
 
                 <div className="mt-6">
                   <h2 className="text-sm font-semibold text-gray-700">Contact</h2>
-                  <a href={`tel:${pro.phone}`} className="mt-1 inline-block text-sm font-medium text-brand-600 hover:underline">
-                    📞 {pro.phone}
-                  </a>
-                  {pro.phoneVerified && <span className="ml-2 text-xs font-semibold text-brand-600">✓ number verified</span>}
+                  <div className="mt-2 flex flex-wrap items-center gap-3">
+                    <span className="text-base font-semibold text-gray-800">📞 {pro.phone}</span>
+                    {pro.phone && (
+                      <a
+                        href={`tel:${pro.phone}`}
+                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-95 transition"
+                        title="Directly call technician"
+                      >
+                        📞 Call Technician
+                      </a>
+                    )}
+                    {pro.phoneVerified && (
+                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                        ✓ Number verified
+                      </span>
+                    )}
+                  </div>
                 </div>
               </section>
 

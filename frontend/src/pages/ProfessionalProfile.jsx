@@ -13,7 +13,7 @@ export default function ProfessionalProfile() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:py-10">
-      <PageHeader title="My profile" subtitle={user?.email}>
+      <PageHeader title="My profile" subtitle={user?.email || user?.phone}>
         <Link to="/pro/dashboard" className="text-sm font-medium text-brand-600 hover:underline">← Back to dashboard</Link>
       </PageHeader>
 

@@ -152,7 +152,9 @@ export default function ProfessionalDashboard() {
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
         <div className="rounded-2xl border border-brand-100 bg-white p-5 shadow-sm">
           <h3 className="font-semibold text-gray-800">My details</h3>
-          <p className="mt-2 break-all text-sm text-gray-500">📧 {pro?.email} {pro?.emailVerified && <span className="text-brand-600">✓</span>}</p>
+          {pro?.email && (
+            <p className="mt-2 break-all text-sm text-gray-500">📧 {pro.email} {pro.emailVerified && <span className="text-brand-600">✓</span>}</p>
+          )}
           <p className="text-sm text-gray-500">📞 {pro?.phone} {pro?.phoneVerified && <span className="text-brand-600">✓</span>}</p>
           {formatAddress(pro?.address) && <p className="text-sm text-gray-500">📍 {formatAddress(pro.address)}</p>}
         </div>
@@ -292,8 +294,19 @@ export default function ProfessionalDashboard() {
                   </div>
                   <p className="mt-2 text-sm text-gray-600">{r.description}</p>
                   <div className="mt-2 text-sm text-gray-500">
-                    <p>👤 {r.customer?.name} • {r.customer?.phone}</p>
-                    <p>📍 {r.location}</p>
+                    <div className="flex flex-wrap items-center gap-2 font-medium text-gray-700">
+                      <span>👤 {r.customer?.name} • 📞 {r.customer?.phone}</span>
+                      {r.customer?.phone && (
+                        <a
+                          href={`tel:${r.customer.phone}`}
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-95 transition"
+                          title="Directly call customer"
+                        >
+                          📞 Call Customer
+                        </a>
+                      )}
+                    </div>
+                    <p className="mt-1">📍 {r.location}</p>
                     <p>🕒 {new Date(r.preferredTime).toLocaleString()}</p>
                     <p className="text-xs text-brand-700 font-medium mt-1">
                       💳 Payment Preference:{" "}
@@ -372,7 +385,17 @@ export default function ProfessionalDashboard() {
               <form onSubmit={submitBillAndComplete} className="space-y-4">
                 <div className="rounded-xl bg-brand-50 p-3 text-xs text-brand-800">
                   <p className="font-semibold">Service: {billModal.service?.name}</p>
-                  <p>Customer: {billModal.customer?.name} ({billModal.customer?.phone})</p>
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    <span>Customer: <b>{billModal.customer?.name}</b> ({billModal.customer?.phone})</span>
+                    {billModal.customer?.phone && (
+                      <a
+                        href={`tel:${billModal.customer.phone}`}
+                        className="inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-0.5 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+                      >
+                        📞 Call
+                      </a>
+                    )}
+                  </div>
                   <p className="mt-1 text-gray-500">
                     Enter the actual labor charges and replacement parts cost after on-site inspection/work.
                   </p>

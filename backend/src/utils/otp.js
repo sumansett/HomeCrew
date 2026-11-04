@@ -14,6 +14,30 @@ exports.sameHash = (a, b) => {
   return x.length === y.length && x.length > 0 && crypto.timingSafeEqual(x, y);
 };
 
+exports.normalizePhone = (phone) => {
+  if (!phone) return "";
+  let clean = String(phone).trim().replace(/[\s-]/g, "");
+  if (!clean.startsWith("+")) {
+    const digits = clean.replace(/\D/g, "");
+    if (digits.length === 10) return "+91" + digits;
+    if (digits.length > 10 && digits.startsWith("91")) return "+" + digits;
+    return digits ? "+" + digits : "";
+  }
+  return clean;
+};
+
+exports.phoneQuery = (phone) => {
+  if (!phone) return { $in: [] };
+  const raw = String(phone).trim();
+  const clean = raw.replace(/[\s-]/g, "");
+  const digits = raw.replace(/\D/g, "").slice(-10);
+  const withPlus91 = digits ? "+91" + digits : "";
+  const withoutPlus = digits;
+  const with91 = digits ? "91" + digits : "";
+  const candidates = Array.from(new Set([raw, clean, withPlus91, withoutPlus, with91])).filter(Boolean);
+  return { $in: candidates };
+};
+
 // ── Nodemailer transporter (Gmail) ──────────────────────────────────
 let transporter = null;
 

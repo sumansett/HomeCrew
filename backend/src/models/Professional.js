@@ -6,9 +6,16 @@ const profilePlugin = require("../utils/profilePlugin");
 const professionalSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    email: {
+      type: String,
+      unique: true,
+      sparse: true,
+      lowercase: true,
+      trim: true,
+      set: (v) => (v && String(v).trim() ? String(v).trim().toLowerCase() : undefined),
+    },
     password: { type: String, required: true, minlength: 6 },
-    phone: { type: String, required: true, trim: true },
+    phone: { type: String, required: true, unique: true, trim: true },
     address: { type: mongoose.Schema.Types.Mixed, default: () => ({ street: "", postOffice: "", district: "", state: "", pinCode: "" }) },
     type: { type: String, enum: ["technician", "contractor"], default: "technician" },
     service: { type: mongoose.Schema.Types.ObjectId, ref: "Service", required: true },

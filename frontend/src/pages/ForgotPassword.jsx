@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import FormInput from "../components/FormInput";
@@ -10,11 +10,11 @@ export default function ForgotPassword() {
   const navigate = useNavigate();
 
   const initialRole = searchParams.get("role") === "professional" ? "professional" : "customer";
-  const initialEmail = searchParams.get("email") || "";
+  const initialPhone = searchParams.get("phone") || searchParams.get("email") || "";
 
   const [as, setAs] = useState(initialRole);
   const [step, setStep] = useState("request"); // "request" | "verify" | "success"
-  const [email, setEmail] = useState(initialEmail);
+  const [phone, setPhone] = useState(initialPhone);
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -22,25 +22,34 @@ export default function ForgotPassword() {
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+
+  // 30s resend timer
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const t = setInterval(() => setCountdown((c) => c - 1), 1000);
+    return () => clearInterval(t);
+  }, [countdown]);
 
   const getBasePath = (role) => (role === "customer" ? "/auth" : "/professionals");
 
-  // Step 1: Request OTP
+  // Step 1: Request OTP to registered mobile number
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setError("");
     setInfo("");
-    if (!email.trim()) {
-      setError("Please enter your email address");
+    if (!phone.trim()) {
+      setError("Please enter your registered mobile number");
       return;
     }
     setLoading(true);
     try {
       const res = await api(`${getBasePath(as)}/forgot-password`, {
         method: "POST",
-        body: { email: email.trim().toLowerCase() },
+        body: { phone: phone.trim() },
       });
-      setInfo(res.message || "A 6-digit verification code has been sent.");
+      setInfo(res.message || "A 6-digit verification code has been sent via SMS.");
+      setCountdown(30);
       setStep("verify");
     } catch (err) {
       setError(err.message);
@@ -57,9 +66,10 @@ export default function ForgotPassword() {
     try {
       const res = await api(`${getBasePath(as)}/forgot-password`, {
         method: "POST",
-        body: { email: email.trim().toLowerCase() },
+        body: { phone: phone.trim() },
       });
-      setInfo(res.message || "A new verification code has been sent.");
+      setCountdown(30);
+      setInfo(res.message || "A new verification code has been sent via SMS.");
     } catch (err) {
       setError(err.message);
     } finally {
@@ -67,7 +77,7 @@ export default function ForgotPassword() {
     }
   };
 
-  // Step 2: Verify OTP and Reset Password
+  // Step 2: Verify SMS OTP and Reset Password
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setError("");
@@ -91,7 +101,7 @@ export default function ForgotPassword() {
       await api(`${getBasePath(as)}/reset-password`, {
         method: "POST",
         body: {
-          email: email.trim().toLowerCase(),
+          phone: phone.trim(),
           code: code.trim(),
           newPassword,
         },
@@ -111,7 +121,7 @@ export default function ForgotPassword() {
           <>
             <h1 className="text-2xl font-bold text-brand-800">Forgot password</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Enter your registered email address and we'll send you a 6-digit code to reset your password.
+              Enter your registered mobile number and we'll send you a 6-digit SMS verification code to reset your password.
             </p>
 
             <div className="mt-5 grid grid-cols-2 rounded-lg bg-brand-50 p-1 text-sm font-medium">
@@ -141,18 +151,18 @@ export default function ForgotPassword() {
               <Alert type="success">{info}</Alert>
 
               <FormInput
-                label="Registered email address"
-                type="email"
-                name="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
+                label="Registered mobile number"
+                type="tel"
+                name="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 98765 43210"
                 required
                 autoFocus
               />
 
               <Button type="submit" loading={loading} className="w-full">
-                Send verification code
+                Send verification code via SMS
               </Button>
             </form>
           </>
@@ -162,16 +172,16 @@ export default function ForgotPassword() {
           <>
             <h1 className="text-2xl font-bold text-brand-800">Reset password</h1>
             <p className="mt-1 text-sm text-gray-500">
-              Enter the 6-digit verification code sent to <span className="font-semibold text-gray-700">{email}</span> and choose a new password.
+              Enter the 6-digit SMS verification code sent to{" "}
+              <span className="font-semibold text-gray-700">{phone}</span> and choose a new password.
             </p>
-
 
             <form onSubmit={handleResetPassword} className="mt-5 space-y-4">
               <Alert type="error">{error}</Alert>
               <Alert type="success">{info}</Alert>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-gray-700">6-Digit verification code</label>
+                <label className="mb-1 block text-sm font-medium text-gray-700">6-Digit SMS verification code</label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -181,6 +191,7 @@ export default function ForgotPassword() {
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                   placeholder="123456"
                   required
+                  autoFocus
                   className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-center text-lg font-mono tracking-[0.3em] outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
                 />
               </div>
@@ -217,10 +228,10 @@ export default function ForgotPassword() {
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  disabled={resending}
+                  disabled={resending || countdown > 0}
                   className="font-medium text-brand-600 hover:underline disabled:opacity-50"
                 >
-                  {resending ? "Sending..." : "Resend code"}
+                  {resending ? "Sending..." : countdown > 0 ? `Resend SMS in ${countdown}s` : "Resend SMS code"}
                 </button>
                 <button
                   type="button"
@@ -232,7 +243,7 @@ export default function ForgotPassword() {
                   }}
                   className="font-medium text-gray-500 hover:text-gray-700 hover:underline"
                 >
-                  Change email
+                  Change mobile number
                 </button>
               </div>
             </form>
@@ -246,7 +257,7 @@ export default function ForgotPassword() {
             </div>
             <h1 className="text-2xl font-bold text-brand-800">Password reset complete</h1>
             <p className="mt-2 text-sm text-gray-600">
-              Your password has been reset successfully. You can now log in to your account with your new credentials.
+              Your password has been reset successfully. You can now log in to your account with your mobile number and new password.
             </p>
             <div className="mt-6">
               <Button type="button" onClick={() => navigate("/login")} className="w-full">

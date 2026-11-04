@@ -122,6 +122,17 @@ module.exports = (Model, { editable = [], populate } = {}) => {
       if (takenUser || takenPro || takenAdmin) fail(res, 409, "That email is already in use");
     }
 
+    if (changing && field === "phone") {
+      const User = require("../models/User");
+      const Professional = require("../models/Professional");
+      const { phoneQuery } = require("../utils/otp");
+      const [takenUser, takenPro] = await Promise.all([
+        User.findOne({ phone: phoneQuery(target), _id: { $ne: user._id } }),
+        Professional.findOne({ phone: phoneQuery(target), _id: { $ne: user._id } }),
+      ]);
+      if (takenUser || takenPro) fail(res, 409, "That mobile number is already in use");
+    }
+
     const pending = user.pendingContact;
     if (pending && pending.sentAt && Date.now() - pending.sentAt.getTime() < RESEND_GAP_MS) {
       fail(res, 429, "Please wait a few seconds before requesting another code");
@@ -192,6 +203,20 @@ module.exports = (Model, { editable = [], populate } = {}) => {
       if (takenUser || takenPro || takenAdmin) {
         await clear();
         fail(res, 409, "That email is already in use");
+      }
+    }
+
+    if (field === "phone" && value !== user.phone) {
+      const User = require("../models/User");
+      const Professional = require("../models/Professional");
+      const { phoneQuery } = require("../utils/otp");
+      const [takenUser, takenPro] = await Promise.all([
+        User.findOne({ phone: phoneQuery(value), _id: { $ne: user._id } }),
+        Professional.findOne({ phone: phoneQuery(value), _id: { $ne: user._id } }),
+      ]);
+      if (takenUser || takenPro) {
+        await clear();
+        fail(res, 409, "That mobile number is already in use");
       }
     }
     user[field] = value;

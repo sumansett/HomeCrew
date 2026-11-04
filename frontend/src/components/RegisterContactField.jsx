@@ -146,7 +146,7 @@ export default function RegisterContactField({
       {otpSent && !isVerified && (
         <div className="mt-2 rounded-xl border border-brand-200 bg-brand-50/60 p-3 text-xs animate-in fade-in">
           <p className="font-medium text-gray-700 mb-1.5">
-            Enter the 6-digit code sent to your {field === "email" ? "email" : "phone"}:
+            Enter the 6-digit verification code sent via SMS to your mobile number:
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <input

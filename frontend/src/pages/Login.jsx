@@ -10,7 +10,7 @@ export default function Login() {
   const { token, role, login } = useAuth();
   const navigate = useNavigate();
   const [as, setAs] = useState("customer"); // customer | professional
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ identifier: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +24,15 @@ export default function Login() {
     setLoading(true);
     try {
       const path = as === "customer" ? "/auth/login" : "/professionals/login";
-      const data = await api(path, { method: "POST", body: form });
+      const data = await api(path, {
+        method: "POST",
+        body: {
+          identifier: form.identifier.trim(),
+          phone: form.identifier.trim(),
+          email: form.identifier.trim(),
+          password: form.password,
+        },
+      });
       login(data);
       navigate(as === "customer" ? "/dashboard" : "/pro/dashboard");
     } catch (err) {
@@ -38,7 +46,7 @@ export default function Login() {
     <div className="mx-auto max-w-md px-4 py-12">
       <div className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm sm:p-8">
         <h1 className="text-2xl font-bold text-brand-800">Welcome back</h1>
-        <p className="mt-1 text-sm text-gray-500">Log in to your HomeCrew account.</p>
+        <p className="mt-1 text-sm text-gray-500">Log in to your HomeCrew account with your mobile number or email.</p>
 
         <div className="mt-5 grid grid-cols-2 rounded-lg bg-brand-50 p-1 text-sm font-medium">
           {[["customer", "Customer"], ["professional", "Technician / Contractor"]].map(([key, label]) => (
@@ -55,7 +63,16 @@ export default function Login() {
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <Alert>{error}</Alert>
-          <FormInput label="Email" type="email" name="email" value={form.email} onChange={handleChange} required />
+          <FormInput
+            label="Mobile number or Email"
+            type="text"
+            name="identifier"
+            value={form.identifier}
+            onChange={handleChange}
+            placeholder="+91 98765 43210 or you@example.com"
+            required
+            autoFocus
+          />
           <FormInput
             label="Password"
             type="password"
@@ -65,7 +82,7 @@ export default function Login() {
             required
             extra={
               <Link
-                to={`/forgot-password?role=${as}${form.email ? `&email=${encodeURIComponent(form.email)}` : ""}`}
+                to={`/forgot-password?role=${as}${form.identifier ? `&phone=${encodeURIComponent(form.identifier)}` : ""}`}
                 className="text-xs font-semibold text-brand-600 hover:text-brand-700 hover:underline"
               >
                 Forgot password?

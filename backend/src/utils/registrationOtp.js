@@ -2,7 +2,7 @@ const RegistrationOtp = require("../models/RegistrationOtp");
 const User = require("../models/User");
 const Professional = require("../models/Professional");
 const Admin = require("../models/Admin");
-const { generateOtp, hashOtp, sameHash, deliverOtp } = require("./otp");
+const { generateOtp, hashOtp, sameHash, deliverOtp, exposeCode, phoneQuery, normalizePhone } = require("./otp");
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 const PHONE_RE = /^\+?[0-9][0-9\s-]{6,17}$/;
@@ -18,10 +18,10 @@ const fail = (res, status, message) => {
 const cleanContact = (field, value) => {
   if (!value) return "";
   const v = String(value).trim();
-  return field === "email" ? v.toLowerCase() : v.replace(/[\s-]/g, "");
+  return field === "email" ? v.toLowerCase() : normalizePhone(v);
 };
 
-// Sends registration OTP to either email or phone
+// Sends registration OTP to either phone (mandatory) or email (optional)
 exports.sendRegistrationOtp = async ({ res, field, value, role }) => {
   if (!["email", "phone"].includes(field)) {
     fail(res, 400, "field must be email or phone");
@@ -29,7 +29,7 @@ exports.sendRegistrationOtp = async ({ res, field, value, role }) => {
 
   const cleanVal = cleanContact(field, value);
   if (!cleanVal) {
-    fail(res, 400, `Please enter your ${field === "email" ? "email address" : "phone number"}`);
+    fail(res, 400, `Please enter your ${field === "email" ? "email address" : "mobile number"}`);
   }
 
   if (field === "email") {
@@ -41,16 +41,17 @@ exports.sendRegistrationOtp = async ({ res, field, value, role }) => {
     ]);
     if (u || p || a) fail(res, 409, "An account with this email address already exists. Please log in.");
   } else {
-    if (!PHONE_RE.test(cleanVal)) fail(res, 400, "Please enter a valid phone number");
+    if (!PHONE_RE.test(cleanVal)) fail(res, 400, "Please enter a valid mobile number");
     const [u, p] = await Promise.all([
-      User.findOne({ phone: cleanVal }),
-      Professional.findOne({ phone: cleanVal }),
+      User.findOne({ phone: phoneQuery(cleanVal) }),
+      Professional.findOne({ phone: phoneQuery(cleanVal) }),
     ]);
-    if (u || p) fail(res, 409, "An account with this phone number already exists.");
+    if (u || p) fail(res, 409, "An account with this mobile number already exists.");
   }
 
   // Check resend gap
-  const existingOtp = await RegistrationOtp.findOne({ field, value: cleanVal, role });
+  const queryVal = field === "phone" ? phoneQuery(cleanVal) : cleanVal;
+  const existingOtp = await RegistrationOtp.findOne({ field, value: queryVal, role });
   if (existingOtp && existingOtp.sentAt && Date.now() - existingOtp.sentAt.getTime() < RESEND_GAP_MS) {
     fail(res, 429, "Please wait a few seconds before requesting another code");
   }
@@ -73,6 +74,7 @@ exports.sendRegistrationOtp = async ({ res, field, value, role }) => {
   return {
     success: true,
     message: `Verification code sent to ${cleanVal}`,
+    ...(exposeCode() ? { devCode: code } : {}),
   };
 };
 
@@ -86,15 +88,16 @@ exports.verifyRegistrationOtpCode = async ({ res, field, value, role, code }) =>
   const cleanCode = String(code || "").trim();
 
   if (!cleanVal) {
-    fail(res, 400, `Please enter your ${field === "email" ? "email address" : "phone number"}`);
+    fail(res, 400, `Please enter your ${field === "email" ? "email address" : "mobile number"}`);
   }
   if (!cleanCode || cleanCode.length !== 6) {
     fail(res, 400, "Please enter the 6-digit verification code");
   }
 
-  const record = await RegistrationOtp.findOne({ field, value: cleanVal, role });
+  const queryVal = field === "phone" ? phoneQuery(cleanVal) : cleanVal;
+  const record = await RegistrationOtp.findOne({ field, value: queryVal, role });
   if (!record) {
-    fail(res, 400, `No active verification found for this ${field}. Please request a code first.`);
+    fail(res, 400, `No active verification found for this ${field === "phone" ? "mobile number" : "email"}. Please request a code first.`);
   }
 
   if (record.expiresAt < new Date()) {
@@ -132,37 +135,32 @@ exports.verifyRegistrationOtpCode = async ({ res, field, value, role, code }) =>
   return {
     success: true,
     verified: true,
-    message: `${field === "email" ? "Email" : "Phone number"} verified successfully!`,
+    message: `${field === "email" ? "Email" : "Mobile number"} verified successfully!`,
   };
 };
 
-// Enforces that BOTH email and phone have been verified prior to account creation
-exports.assertRegistrationContactsVerified = async ({ res, email, phone, role }) => {
-  const cleanEmail = cleanContact("email", email);
+// Enforces that mandatory mobile number has been verified prior to account creation. Email is optional.
+exports.assertRegistrationContactsVerified = async ({ res, phone, role }) => {
   const cleanPhone = cleanContact("phone", phone);
 
-  if (!cleanEmail) fail(res, 400, "Email address is required");
-  if (!cleanPhone) fail(res, 400, "Phone number is required");
+  if (!cleanPhone) fail(res, 400, "Mobile number is required");
 
-  const [emailRecord, phoneRecord] = await Promise.all([
-    RegistrationOtp.findOne({ field: "email", value: cleanEmail, role, verified: true }),
-    RegistrationOtp.findOne({ field: "phone", value: cleanPhone, role, verified: true }),
-  ]);
+  const phoneRecord = await RegistrationOtp.findOne({
+    field: "phone",
+    value: phoneQuery(cleanPhone),
+    role,
+    verified: true,
+  });
 
-  if (!emailRecord || emailRecord.expiresAt < new Date()) {
-    fail(res, 400, "Please verify your email address with OTP before registering");
-  }
   if (!phoneRecord || phoneRecord.expiresAt < new Date()) {
-    fail(res, 400, "Please verify your phone number with OTP before registering");
+    fail(res, 400, "Please verify your mobile number with OTP before registering");
   }
 
-  // Cleanup after verification check is passed
+  // Cleanup phone verification record after successful assertion
   await RegistrationOtp.deleteMany({
     role,
-    $or: [
-      { field: "email", value: cleanEmail },
-      { field: "phone", value: cleanPhone },
-    ],
+    field: "phone",
+    value: phoneQuery(cleanPhone),
   });
 
   return true;

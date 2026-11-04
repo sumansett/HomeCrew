@@ -31,14 +31,29 @@ export default function RequestCard({ request, children }) {
           </span>
         </p>
         {request.assignedProfessional && (
-          <div className="mt-1 flex flex-wrap items-center gap-3 rounded-xl bg-brand-50 p-3 sm:col-span-2">
-            <Avatar user={request.assignedProfessional} className="h-11 w-11" text="text-base" />
-            <p className="min-w-0 flex-1">
-              👷 Assigned: <b className="text-gray-700">{request.assignedProfessional.name}</b>{" "}
-              <span className="capitalize">({request.assignedProfessional.type})</span>
-              <span className="block text-xs">📞 {request.assignedProfessional.phone}</span>
-            </p>
-            <Link to={`/my-requests/${request._id}/professional`} className="text-sm font-semibold text-brand-600 hover:underline">
+          <div className="mt-2 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-brand-200/60 bg-gradient-to-r from-brand-50 to-emerald-50/40 p-3.5 sm:col-span-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar user={request.assignedProfessional} className="h-11 w-11 shrink-0" text="text-base" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-800 truncate">
+                  👷 Assigned: <span className="text-brand-900">{request.assignedProfessional.name}</span>{" "}
+                  <span className="text-xs font-normal text-gray-500 capitalize">({request.assignedProfessional.type})</span>
+                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <span className="text-xs text-gray-600 font-medium">📞 {request.assignedProfessional.phone}</span>
+                  {request.assignedProfessional.phone && (
+                    <a
+                      href={`tel:${request.assignedProfessional.phone}`}
+                      className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-3 py-1 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 active:scale-95 transition"
+                      title="Directly call technician"
+                    >
+                      📞 Call Technician
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Link to={`/my-requests/${request._id}/professional`} className="text-xs font-semibold text-brand-700 hover:text-brand-900 hover:underline shrink-0">
               View profile →
             </Link>
           </div>

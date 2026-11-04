@@ -113,9 +113,18 @@ export default function Requests() {
                     <h3 className="font-semibold text-gray-800 text-base">
                       {r.service?.icon} {r.service?.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
-                      {r.customer?.name} • {r.customer?.phone || r.customer?.email}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
+                      <span>{r.customer?.name} • {r.customer?.phone || r.customer?.email}</span>
+                      {r.customer?.phone && (
+                        <a
+                          href={`tel:${r.customer.phone}`}
+                          className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                          title="Call customer"
+                        >
+                          📞 Call
+                        </a>
+                      )}
+                    </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Payment Done / Not Done Badge */}
@@ -144,9 +153,20 @@ export default function Requests() {
                 <div className="mt-2 grid gap-1 text-sm text-gray-500 sm:grid-cols-2">
                   <p>📍 {r.location}</p>
                   <p>🕒 {new Date(r.preferredTime).toLocaleString()}</p>
-                  <p className="sm:col-span-2">
-                    👷 {r.assignedProfessional ? `${r.assignedProfessional.name} (${r.assignedProfessional.phone})` : "Not assigned yet"}
-                  </p>
+                  <div className="sm:col-span-2 flex flex-wrap items-center gap-2">
+                    <span>
+                      👷 {r.assignedProfessional ? `${r.assignedProfessional.name} (${r.assignedProfessional.phone})` : "Not assigned yet"}
+                    </span>
+                    {r.assignedProfessional?.phone && (
+                      <a
+                        href={`tel:${r.assignedProfessional.phone}`}
+                        className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition"
+                        title="Call technician"
+                      >
+                        📞 Call Technician
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 {/* Payment Method & Billing Details Card */}

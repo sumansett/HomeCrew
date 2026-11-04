@@ -19,7 +19,6 @@ export default function Register() {
     address: { street: "", postOffice: "", district: "", state: "", pinCode: "" },
     password: "",
   });
-  const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,12 +29,8 @@ export default function Register() {
     e.preventDefault();
     setError("");
 
-    if (!emailVerified) {
-      setError("Please verify your email address using OTP before signing up.");
-      return;
-    }
     if (!phoneVerified) {
-      setError("Please verify your phone number using OTP before signing up.");
+      setError("Please verify your mobile number using OTP before signing up.");
       return;
     }
     if (form.password.length < 6) {
@@ -49,7 +44,7 @@ export default function Register() {
         method: "POST",
         body: {
           name: form.name.trim(),
-          email: form.email.trim().toLowerCase(),
+          email: form.email ? form.email.trim().toLowerCase() : undefined,
           phone: form.phone.trim(),
           address: form.address,
           password: form.password,
@@ -64,14 +59,12 @@ export default function Register() {
     }
   };
 
-  const allVerified = emailVerified && phoneVerified;
-
   return (
     <div className="mx-auto max-w-md px-4 py-12">
       <div className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm sm:p-8">
         <h1 className="text-2xl font-bold text-brand-800">Create your account</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Request home services in minutes. Please verify both your email and phone number with OTP.
+          Request home services in minutes. Mobile verification is required. Email is optional.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
@@ -86,23 +79,9 @@ export default function Register() {
             required
           />
 
-          {/* Email with inline OTP verification */}
+          {/* Mandatory Phone with inline SMS OTP verification */}
           <RegisterContactField
-            label="Email address"
-            field="email"
-            type="email"
-            value={form.email}
-            onChange={(val) => setForm((prev) => ({ ...prev, email: val }))}
-            placeholder="you@example.com"
-            apiBase="/auth"
-            isVerified={emailVerified}
-            onVerifiedChange={setEmailVerified}
-            required
-          />
-
-          {/* Phone with inline OTP verification */}
-          <RegisterContactField
-            label="Phone number"
+            label="Mobile number"
             field="phone"
             type="tel"
             value={form.phone}
@@ -112,6 +91,17 @@ export default function Register() {
             isVerified={phoneVerified}
             onVerifiedChange={setPhoneVerified}
             required
+          />
+
+          {/* Optional Email address - does not require OTP */}
+          <FormInput
+            label="Email address (Optional)"
+            name="email"
+            type="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="you@example.com (optional)"
+            extra={<span className="text-xs text-gray-400">Optional — No verification required</span>}
           />
 
           {/* Structured address fields: street, post office, district, state, pin code */}
@@ -132,18 +122,18 @@ export default function Register() {
           />
 
           <div className="pt-2">
-            {!allVerified && (
+            {!phoneVerified && (
               <p className="mb-2 text-center text-xs text-amber-700 font-medium">
-                ⚠️ Verify both your email and phone with OTP to complete registration
+                ⚠️ Verify your mobile number with OTP to register (email is optional)
               </p>
             )}
             <Button
               type="submit"
               loading={loading}
-              disabled={!allVerified || loading}
+              disabled={!phoneVerified || loading}
               className="w-full disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {allVerified ? "Complete Registration" : "Verify Email & Phone to Register"}
+              {phoneVerified ? "Complete Registration" : "Verify Mobile Number to Register"}
             </Button>
           </div>
         </form>

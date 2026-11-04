@@ -26,7 +26,6 @@ export default function ProfessionalRegister() {
     about: "",
   });
   const [files, setFiles] = useState({ idDocument: null, certificate: null });
-  const [emailVerified, setEmailVerified] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -38,12 +37,8 @@ export default function ProfessionalRegister() {
     e.preventDefault();
     setError("");
 
-    if (!emailVerified) {
-      setError("Please verify your email address using OTP before submitting.");
-      return;
-    }
     if (!phoneVerified) {
-      setError("Please verify your phone number using OTP before submitting.");
+      setError("Please verify your mobile number using OTP before submitting.");
       return;
     }
     if (form.password.length < 6) {
@@ -60,12 +55,12 @@ export default function ProfessionalRegister() {
       const body = new FormData();
       Object.entries(form).forEach(([k, v]) => {
         if (k === "email") {
-          body.append(k, v.trim().toLowerCase());
+          if (v && v.trim()) body.append(k, v.trim().toLowerCase());
         } else if (k === "phone") {
           body.append(k, v.trim());
         } else if (k === "address") {
           body.append(k, JSON.stringify(v));
-        } else {
+        } else if (v !== undefined && v !== null) {
           body.append(k, v);
         }
       });
@@ -82,14 +77,12 @@ export default function ProfessionalRegister() {
     }
   };
 
-  const allVerified = emailVerified && phoneVerified;
-
   return (
     <div className="mx-auto max-w-2xl px-4 py-12">
       <div className="rounded-3xl border border-brand-100 bg-white p-5 shadow-sm sm:p-8">
         <h1 className="text-2xl font-bold text-brand-800">Join HomeCrew as a professional</h1>
         <p className="mt-1 text-sm text-gray-500">
-          Submit your details and documents. Please verify both your email and phone number with OTP.
+          Submit your details and documents. Mobile verification is required. Email is optional.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -107,23 +100,9 @@ export default function ProfessionalRegister() {
             required
           />
 
-          {/* Email with inline OTP verification */}
+          {/* Phone with inline SMS OTP verification (MANDATORY) */}
           <RegisterContactField
-            label="Email address"
-            field="email"
-            type="email"
-            value={form.email}
-            onChange={(val) => setForm((prev) => ({ ...prev, email: val }))}
-            placeholder="you@example.com"
-            apiBase="/professionals"
-            isVerified={emailVerified}
-            onVerifiedChange={setEmailVerified}
-            required
-          />
-
-          {/* Phone with inline OTP verification */}
-          <RegisterContactField
-            label="Phone number"
+            label="Mobile number"
             field="phone"
             type="tel"
             value={form.phone}
@@ -133,6 +112,18 @@ export default function ProfessionalRegister() {
             isVerified={phoneVerified}
             onVerifiedChange={setPhoneVerified}
             required
+          />
+
+          {/* Email address (OPTIONAL - no OTP required) */}
+          <FormInput
+            label="Email address (Optional)"
+            field="email"
+            type="email"
+            name="email"
+            value={form.email}
+            onChange={handleChange}
+            placeholder="you@example.com (optional)"
+            extra={<span className="text-xs text-gray-400">Optional — No verification required</span>}
           />
 
           <FormInput
@@ -226,18 +217,18 @@ export default function ProfessionalRegister() {
           </label>
 
           <div className="sm:col-span-2 pt-2">
-            {!allVerified && (
+            {!phoneVerified && (
               <p className="mb-2 text-center text-xs text-amber-700 font-medium">
-                ⚠️ Verify both your email and phone number with OTP to register
+                ⚠️ Verify your mobile number with OTP to register (email is optional)
               </p>
             )}
             <Button
               type="submit"
               loading={loading}
-              disabled={!allVerified || loading}
+              disabled={!phoneVerified || loading}
               className="w-full disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {allVerified ? "Submit for verification" : "Verify Email & Phone to Register"}
+              {phoneVerified ? "Submit for verification" : "Verify Mobile Number to Register"}
             </Button>
           </div>
         </form>

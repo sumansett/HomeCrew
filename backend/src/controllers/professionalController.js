@@ -1,8 +1,11 @@
 const Professional = require("../models/Professional");
+const User = require("../models/User");
+const Admin = require("../models/Admin");
 const Verification = require("../models/Verification");
 const ServiceRequest = require("../models/ServiceRequest");
 const asyncHandler = require("../utils/asyncHandler");
 const generateToken = require("../utils/generateToken");
+const { phoneQuery, normalizePhone } = require("../utils/otp");
 
 const fs = require("fs");
 const {
@@ -14,17 +17,19 @@ const { getProfessionalFinancialSummary } = require("../utils/financials");
 const { getRazorpayInstance, verifySignature } = require("../utils/razorpay");
 const { createNotification } = require("../utils/notify");
 
-// POST /api/professionals/send-register-otp (email or phone)
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+
+// POST /api/professionals/send-register-otp (phone is mandatory, email is optional)
 exports.sendRegisterOtp = asyncHandler(async (req, res) => {
-  const field = req.body?.field || "email";
+  const field = req.body?.field || "phone";
   const value = req.body?.value || (field === "email" ? req.body?.email : req.body?.phone);
   const result = await sendRegistrationOtp({ res, field, value, role: "professional" });
   res.json(result);
 });
 
-// POST /api/professionals/verify-register-otp (email or phone)
+// POST /api/professionals/verify-register-otp (phone or email)
 exports.verifyRegisterOtp = asyncHandler(async (req, res) => {
-  const { field, value, code } = req.body || {};
+  const { field = "phone", value, code } = req.body || {};
   const result = await verifyRegistrationOtpCode({ res, field, value, role: "professional", code });
   res.json(result);
 });
@@ -32,10 +37,15 @@ exports.verifyRegisterOtp = asyncHandler(async (req, res) => {
 // POST /api/professionals/register  (multipart: idDocument, certificate)
 exports.register = asyncHandler(async (req, res) => {
   const { name, email, password, phone, address, type, service, experience, about } = req.body || {};
-  if (!name || !email || !password || !phone || !service) {
+  if (!name || !password || !phone || !service) {
     res.status(400);
-    throw new Error("Name, email, password, phone and service category are required");
+    throw new Error("Full name, mobile number, password, and service category are required");
   }
+  if (String(password).length < 6) {
+    res.status(400);
+    throw new Error("Password must be at least 6 characters long");
+  }
+
   const idDoc = req.files && req.files.idDocument && req.files.idDocument[0];
   const cert = req.files && req.files.certificate && req.files.certificate[0];
   if (!idDoc || !cert) {
@@ -43,14 +53,51 @@ exports.register = asyncHandler(async (req, res) => {
     throw new Error("Identity document and experience certificate are required");
   }
 
-  // Strictly enforce that BOTH email and phone number are verified with OTP
+  const cleanPhone = normalizePhone(phone);
+  let cleanEmail = email ? String(email).trim().toLowerCase() : undefined;
+  if (!cleanEmail) cleanEmail = undefined;
+
+  // Enforce mandatory mobile OTP verification using existing Twilio SMS system
   try {
-    await assertRegistrationContactsVerified({ res, email, phone, role: "professional" });
+    await assertRegistrationContactsVerified({ res, phone: cleanPhone, role: "professional" });
   } catch (err) {
     // Delete newly uploaded files if verification check fails to prevent junk on disk
     if (idDoc?.path) fs.unlink(idDoc.path, () => {});
     if (cert?.path) fs.unlink(cert.path, () => {});
     throw err;
+  }
+
+  // Optional email validation & uniqueness check (does not require OTP)
+  if (cleanEmail) {
+    if (!EMAIL_RE.test(cleanEmail)) {
+      if (idDoc?.path) fs.unlink(idDoc.path, () => {});
+      if (cert?.path) fs.unlink(cert.path, () => {});
+      res.status(400);
+      throw new Error("Please enter a valid email address");
+    }
+    const [u, p, a] = await Promise.all([
+      User.findOne({ email: cleanEmail }),
+      Professional.findOne({ email: cleanEmail }),
+      Admin.findOne({ email: cleanEmail }),
+    ]);
+    if (u || p || a) {
+      if (idDoc?.path) fs.unlink(idDoc.path, () => {});
+      if (cert?.path) fs.unlink(cert.path, () => {});
+      res.status(409);
+      throw new Error("An account with this email address already exists.");
+    }
+  }
+
+  // Ensure mobile number uniqueness
+  const [phoneUser, phonePro] = await Promise.all([
+    User.findOne({ phone: phoneQuery(cleanPhone) }),
+    Professional.findOne({ phone: phoneQuery(cleanPhone) }),
+  ]);
+  if (phoneUser || phonePro) {
+    if (idDoc?.path) fs.unlink(idDoc.path, () => {});
+    if (cert?.path) fs.unlink(cert.path, () => {});
+    res.status(409);
+    throw new Error("An account with this mobile number already exists.");
   }
 
   let cleanAddress = address;
@@ -62,15 +109,15 @@ exports.register = asyncHandler(async (req, res) => {
 
   const professional = await Professional.create({
     name: name.trim(),
-    email: email.trim().toLowerCase(),
+    email: cleanEmail,
     password,
-    phone: phone.trim(),
+    phone: cleanPhone,
     address: cleanAddress,
     type: type || "technician",
     service,
     experience: experience ? Number(experience) : 0,
     about: about ? about.trim() : "",
-    emailVerified: true,
+    emailVerified: false,
     phoneVerified: true,
   });
 
@@ -96,18 +143,32 @@ exports.register = asyncHandler(async (req, res) => {
   });
 });
 
-// POST /api/professionals/login
+// POST /api/professionals/login (allows login with registered mobile number or email)
 exports.login = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) {
+  const identifier = (req.body.identifier || req.body.phone || req.body.email || "").trim();
+  const password = req.body.password;
+
+  if (!identifier || !password) {
     res.status(400);
-    throw new Error("Please fill all required fields");
+    throw new Error("Mobile number (or email) and password are required");
   }
-  const pro = await Professional.findOne({ email: email.toLowerCase() });
+
+  let pro = null;
+  if (identifier.includes("@")) {
+    pro = await Professional.findOne({ email: identifier.toLowerCase() });
+  } else {
+    pro = await Professional.findOne({ phone: phoneQuery(identifier) });
+  }
+
+  if (!pro && !identifier.includes("@")) {
+    pro = await Professional.findOne({ email: identifier.toLowerCase() });
+  }
+
   if (!pro || !(await pro.matchPassword(password))) {
     res.status(401);
-    throw new Error("Invalid email or password");
+    throw new Error("Invalid mobile number/email or password");
   }
+
   res.json({ success: true, token: generateToken(pro._id, "professional"), role: "professional", user: pro });
 });
 
