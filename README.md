@@ -54,7 +54,7 @@ npm run dev       # http://localhost:5174
 ```
 
 ### Admin login
-- Email: `admin@homecrew.com`
+- Email: `genxproject8@gmail.com`
 - Password: `admin123`
 
 (change in `backend/.env` *before* running `npm run seed`)
